@@ -94,3 +94,20 @@ XR/
 
 # Ignore SerializedUdonPrograms
 Assets/SerializedUdonPrograms
+
+# -------------------------------------------------
+# User Specific Ignores (Paid Assets & Local Tools)
+# アセット名* とすることで、フォルダと.metaファイルを同時に無視します
+
+# Skybox assets
+Assets/AllSkyFree*
+
+# Bakery (Lightmapper)
+Assets/Bakery*
+
+# Hot Reload (Local Tool)
+Packages/com.singularitygroup.hotreload*
+
+# その他、Untrackedに出ている不要そうなもの（必要に応じて）
+Assets/Settings*
+Assets/UnityTechnologies*
