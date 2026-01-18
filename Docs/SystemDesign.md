@@ -290,11 +290,12 @@ public class GazeGuide : UdonSharpBehaviour
 |---------|-------------|------|------|
 | **コア** | GameManager | ✅ 実装済 | フェーズ管理・遷移制御 |
 | **コア** | NextButton | ✅ 実装済 | フェーズ遷移トリガー |
-| **UI** | MessageWindow | 🔧 設計中 | 視点追従UIシステム |
+| **コア** | BattleSequencer | 📝 設計済 | 戦闘シーケンス制御 |
+| **UI** | MessageWindow | 📝 設計済 | 視点追従UIシステム |
+| **UI** | GazeGuide | 📝 設計済 | 注視誘導システム |
 | **UI** | DialogueSystem | ❌ 未実装 | VN形式の会話システム |
 | **戦闘** | WeaponController | ✅ 実装済 | 武器の発砲・リロード |
 | **戦闘** | EnemyController | ❌ 未実装 | 敵兵のAI・被弾処理 |
-| **戦闘** | EnemySpawner | ❌ 未実装 | 敵兵の出現管理 |
 | **エフェクト** | MuzzleFlash | ❌ 未実装 | 発砲エフェクト |
 | **エフェクト** | HitEffect | ❌ 未実装 | 命中エフェクト |
 
