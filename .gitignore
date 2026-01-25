@@ -108,6 +108,10 @@ Assets/Bakery*
 # Hot Reload (Local Tool)
 Packages/com.singularitygroup.hotreload*
 
+# VRChat SDK Packages (VCC で管理されるため Git から除外)
+Packages/com.vrchat.base/
+Packages/com.vrchat.worlds/
+
 # その他、Untrackedに出ている不要そうなもの（必要に応じて）
 Assets/Settings*
 Assets/UnityTechnologies*
