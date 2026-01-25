@@ -335,20 +335,57 @@ void LateUpdate()
 
 ## 7. Hierarchy構成
 
-```
-World
-├── GazeGuide (GazeGuide.cs)
-│   ├── [参照] HighlightPrefab
-│   ├── [参照] ArrowIndicatorPrefab
-│   └── [参照] AimingGuidePrefab
-└── ...
+> [!NOTE]
+> SceneDesign.md に基づく正式な配置
 
-Prefabs/
-├── Effects/
-│   ├── GazeHighlight.prefab      # ハイライトエフェクト
-│   ├── GazeArrowIndicator.prefab # 矢印インジケータ
-│   └── GazeAimingGuide.prefab    # 照準ガイド
+### 7.1. シーン内配置
+
 ```
+Syuron (Scene Root)
+│
+├── [SYSTEM] ─────────────────────── システム管理用
+│   ├── GameManager                  フェーズ管理
+│   ├── MessageWindow                視点追従UI
+│   ├── EventSequencer               イベントシーケンス制御
+│   └── GazeGuide                    注視誘導システム ← ここ
+│       (GazeGuide.cs)
+│       ※ Prefab参照はインスペクターで設定
+│
+├── [CONTENT_ROOT] ───────────────── コンテンツ本体
+│   ├── Phase0_Intro
+│   ├── Phase1_Strategy
+│   ├── Phase2_Battle
+│   │   ├── Gun_Minie                ← GazeGuide対象（プレイヤーの銃）
+│   │   └── Enemy                    ← GazeGuide対象（敵兵）
+│   └── Phase3_Outro
+│
+└── [SPAWN_POINTS]
+```
+
+### 7.2. アセット構成
+
+```
+Assets/
+├── Scripts/
+│   └── UI/
+│       └── GazeGuide.cs             # メインスクリプト
+│
+└── Prefabs/
+    └── Effects/
+        ├── GazeHighlight.prefab      # ハイライトエフェクト
+        ├── GazeArrowIndicator.prefab # 矢印インジケータ
+        └── GazeAimingGuide.prefab    # 照準ガイド
+```
+
+### 7.3. インスペクター設定
+
+GazeGuide オブジェクトに以下を設定:
+
+| プロパティ | 設定値 |
+|-----------|--------|
+| Highlight Prefab | Prefabs/Effects/GazeHighlight |
+| Arrow Indicator Prefab | Prefabs/Effects/GazeArrowIndicator |
+| Aiming Guide Prefab | Prefabs/Effects/GazeAimingGuide |
 
 ---
 
@@ -425,6 +462,9 @@ private void RunSubPhase_3C()
 ---
 
 ## 11. 実装スケジュール
+
+> [!TIP]
+> 各ステップの詳細な作業内容は [GazeGuide_Implementation.md](./GazeGuide_Implementation.md) を参照
 
 | ステップ | 内容 | 見積もり |
 |----------|------|----------|
