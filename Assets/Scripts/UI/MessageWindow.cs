@@ -201,7 +201,7 @@ public class MessageWindow : UdonSharpBehaviour
             worldFixedAnchors[0] = anchor;
             currentAnchorIndex = 0;
         }
-        Debug.Log($"[MessageWindow] アンカー直接設定: {anchor?.name}");
+        Debug.Log($"[MessageWindow] アンカー直接設定: {(anchor != null ? anchor.name : "null")}");
     }
 
     #endregion
