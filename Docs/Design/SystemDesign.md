@@ -261,9 +261,10 @@ public class GazeGuide : UdonSharpBehaviour
 |---------|------|------|
 | WeaponController | ✅ 実装済 | 武器の発砲・命中判定 |
 | EnemyController | ❌ 未実装 | 敵兵のAI・被弾処理 |
-| **GazeGuide** | ❌ 未実装 | **注視誘導システム（新規追加）** |
-| **BattleSequencer** | ❌ 未実装 | **戦闘シーケンス制御（新規追加）** |
-| MessageWindow | 🔧 設計中 | 視点追従UI |
+| **GazeGuide** | 📝 設計中 | **注視誘導システム** |
+| **EventSequencer** | 📝 設計中 | **汎用イベントシーケンス制御** |
+| MessageWindow | ✅ 実装済 | 視点追従UI |
+| **MessageTrigger** | 📝 設計中 | **メッセージ外部化トリガー** |
 | HitEffect | ❌ 未実装 | 命中エフェクト |
 | MuzzleFlash | ❌ 未実装 | 発砲エフェクト |
 
@@ -290,9 +291,10 @@ public class GazeGuide : UdonSharpBehaviour
 |---------|-------------|------|------|
 | **コア** | GameManager | ✅ 実装済 | フェーズ管理・遷移制御 |
 | **コア** | NextButton | ✅ 実装済 | フェーズ遷移トリガー |
-| **コア** | BattleSequencer | 📝 設計済 | 戦闘シーケンス制御 |
-| **UI** | MessageWindow | 📝 設計済 | 視点追従UIシステム |
-| **UI** | GazeGuide | 📝 設計済 | 注視誘導システム |
+| **コア** | EventSequencer | 📝 設計中 | 汎用イベントシーケンス制御 |
+| **UI** | MessageWindow | ✅ 実装済 | 視点追従UIシステム |
+| **UI** | MessageTrigger | 📝 設計中 | メッセージ外部化トリガー |
+| **UI** | GazeGuide | 📝 設計中 | 注視誘導システム |
 | **UI** | DialogueSystem | ❌ 未実装 | VN形式の会話システム |
 | **戦闘** | WeaponController | ✅ 実装済 | 武器の発砲・リロード |
 | **戦闘** | EnemyController | ❌ 未実装 | 敵兵のAI・被弾処理 |
@@ -338,7 +340,8 @@ Assets/
 │   │   ├── GameManager.cs       ✅
 │   │   └── NextButton.cs        ✅
 │   ├── UI/
-│   │   ├── MessageWindow.cs     🔧
+│   │   ├── MessageWindow.cs     ✅
+│   │   ├── MessageTrigger.cs    📝
 │   │   └── DialogueSystem.cs    ❌
 │   ├── Gun/
 │   │   └── WeaponController.cs  ✅
@@ -371,8 +374,9 @@ Assets/
 1. [x] GameManager - フェーズ管理
 2. [x] NextButton - 遷移トリガー
 3. [x] WeaponController - 武器システム
-4. [ ] **MessageWindow - 視点追従UI** ← 現在ここ
-5. [ ] EnemyController - 敵兵AI
+4. [x] MessageWindow - 視点追従UI
+5. [ ] **MessageTrigger - メッセージ外部化** ← 現在ここ
+6. [ ] EnemyController - 敵兵AI
 
 ### Phase 2: コンテンツ導入 (2月)
 6. [ ] DialogueSystem - 会話システム
@@ -403,3 +407,4 @@ Assets/
 | 日付 | 内容 |
 |------|------|
 | 2026-01-18 | 初版作成 |
+| 2026-01-25 | MessageWindow実装済に更新、MessageTrigger・EventSequencer追加 |

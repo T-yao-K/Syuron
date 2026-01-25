@@ -1,8 +1,14 @@
 # システム設計書：VR可変式メッセージウィンドウシステム
 
+> **実装状態**: ✅ 実装済  
+> **ファイル**: [MessageWindow.cs](file:///e:/development/University/Syuron/Assets/Scripts/UI/MessageWindow.cs)  
+> **関連**: [MessageTrigger.cs](file:///e:/development/University/Syuron/Assets/Scripts/UI/MessageTrigger.cs)
+
 ## 1. 概要
 
 本システムは、VR空間内においてユーザー（学習者）に対し、シナリオの進行状況や学習コンテンツ（大村益次郎の解説、武器データ等）を提示するためのUIシステムである。
+
+**MessageTrigger** コンポーネントと組み合わせることで、コードを変更せずにインスペクターからメッセージ内容を設定可能。
 
 VR特有の**「酔い」**や**「没入感の阻害」**を防ぐため、視点追従の挙動を柔軟に切り替えられる設計とする。
 
@@ -112,32 +118,35 @@ classDiagram
         +float followSpeed
         +Vector3 viewOffset
         +float popupDuration
-        +Transform worldFixedAnchor
-        +GazeGuide gazeGuide
-        +bool syncWithGaze
+        +Transform[] worldFixedAnchors
+        +UdonSharpBehaviour gazeGuide
+        -int currentAnchorIndex
         -bool isVisible
-        -float currentAlpha
         +ShowMessage(string text)
         +ShowWithGaze(string text, Transform target)
+        +ShowPopup(string text)
         +HideWindow()
         +SetMode(int mode)
-        -UpdatePosition()
-        -UpdateRotation()
-        -HandleFade()
+        +SetWorldFixedAnchor(int index)
+        +SetWorldFixedAnchorDirect(Transform anchor)
+    }
+
+    class MessageTrigger {
+        +string message
+        +int displayMode
+        +Transform anchor
+        +bool useGazeGuide
+        +Transform gazeTarget
+        +MessageWindow messageWindow
+        +TriggerMessage()
+        +HideMessage()
     }
 
     class GazeGuide {
         +Transform target
         +GameObject highlightEffect
-        +GameObject arrowIndicator
         +StartGuide(Transform target)
         +StopGuide()
-    }
-
-    class BattleSequencer {
-        +MessageWindow messageWindow
-        +GazeGuide gazeGuide
-        +RunSequence()
     }
 
     class GameManager {
@@ -146,8 +155,7 @@ classDiagram
     }
 
     GameManager --> MessageWindow : uses
-    BattleSequencer --> MessageWindow : controls
-    BattleSequencer --> GazeGuide : controls
+    MessageTrigger --> MessageWindow : uses
     MessageWindow --> GazeGuide : optional sync
 ```
 
@@ -160,35 +168,26 @@ classDiagram
 | `followSpeed` | float | 追従のスムーズさ | 5.0 |
 | `viewOffset` | Vector3 | 画面中央からの位置ズレ | (0, -0.3, 0) |
 | `popupDuration` | float | ポップアップモード時の表示時間 (秒) | 5.0 |
-| `worldFixedAnchor` | Transform | 完全固定モード時のアンカー位置 | null |
-| `gazeGuide` | GazeGuide | 連携する注視誘導システム | null |
-| `syncWithGaze` | bool | GazeGuideと同期するか | false |
+| `worldFixedAnchors` | Transform[] | **フェーズごとのアンカー位置（配列）** | null |
+| `gazeGuide` | UdonSharpBehaviour | 連携する注視誘導システム | null |
 | `backgroundPanel` | GameObject | 背景パネルオブジェクト | - |
 | `messageText` | TextMeshProUGUI | メッセージ表示用テキスト | - |
 
 ### 4.3. パブリックメソッド
 
 ```csharp
-/// <summary>
-/// テキストを更新してウィンドウを表示する
-/// </summary>
+// 基本メソッド
 public void ShowMessage(string text)
+public void ShowPopup(string text)
+public void HideWindow()
+public void SetMode(int mode)
 
-/// <summary>
-/// 注視誘導と同時にメッセージを表示する
-/// </summary>
+// GazeGuide連携
 public void ShowWithGaze(string text, Transform target)
 
-/// <summary>
-/// ウィンドウを非表示にする
-/// </summary>
-public void HideWindow()
-
-/// <summary>
-/// 動作モードを切り替える
-/// </summary>
-/// <param name="mode">0: Always On, 1: Pop-up, 2: World Fixed</param>
-public void SetMode(int mode)
+// アンカー切り替え (新規)
+public void SetWorldFixedAnchor(int index)
+public void SetWorldFixedAnchorDirect(Transform anchor)
 ```
 
 ---
@@ -291,11 +290,24 @@ private void UpdatePopup()
 ```csharp
 private void UpdatePositionWorldFixed()
 {
-    if (worldFixedAnchor == null) return;
-    transform.position = worldFixedAnchor.position;
-    transform.rotation = worldFixedAnchor.rotation;
+    if (worldFixedAnchors == null || worldFixedAnchors.Length == 0) return;
+    if (currentAnchorIndex < 0 || currentAnchorIndex >= worldFixedAnchors.Length) return;
+    
+    Transform anchor = worldFixedAnchors[currentAnchorIndex];
+    if (anchor == null) return;
+
+    transform.position = anchor.position;
+    transform.rotation = anchor.rotation;
 }
 ```
+
+---
+
+## 7. MessageTrigger との連携
+
+コードを変更せずにメッセージを設定する場合は、MessageTrigger コンポーネントを使用する。
+
+詳細: [MessageTrigger.md](MessageTrigger.md)
 
 ---
 
@@ -468,3 +480,4 @@ public class GameManager : UdonSharpBehaviour
 |------|------|
 | 2026-01-18 | 初版作成 |
 | 2026-01-18 | Phase 3 の UIモードを Mode 0 に変更、GazeGuide連携を追加 |
+| 2026-01-25 | 実装完了、worldFixedAnchors配列化、MessageTrigger連携追加 |

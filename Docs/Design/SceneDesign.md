@@ -197,7 +197,8 @@ Syuron
 ├── EventSystem ✅
 ├── VRCWorld ✅
 ├── [SYSTEM]
-│   └── GameManager ✅
+│   ├── GameManager ✅
+│   └── MessageWindow ✅
 ├── [CONTENT_ROOT]
 │   ├── NextButton ✅
 │   ├── Phase0_Intro ✅
@@ -210,7 +211,7 @@ Syuron
 │   ├── hako(1)Dim
 │   └── Phase_LConro
 └── [SPAWN_POINTS]
-    ├── Spawn_Info (?)
+    ├── Spawn_Intro ✅
     ├── Spawn_Strategy ✅
     ├── Spawn_Battle ✅
     └── Spawn_Outro ✅
@@ -218,13 +219,13 @@ Syuron
 
 ### 10.1. 追加が必要なもの
 
-| オブジェクト | 配置場所 | 用途 |
-|-------------|---------|------|
-| MessageWindow | [SYSTEM] | 視点追従UI |
-| MessageAnchor | Phase0_Intro | World Fixed UI用 |
-| MessageAnchor | Phase3_Outro | World Fixed UI用 |
-| BattleSequencer | [SYSTEM] | 戦闘シーケンス (後日) |
-| GazeGuide | [SYSTEM] | 注視誘導 (後日) |
+| オブジェクト | 配置場所 | 用途 | 状態 |
+|-------------|---------|------|------|
+| MessageAnchor | Phase0_Intro | World Fixed UI用 | ✗ 未追加 |
+| MessageAnchor | Phase3_Outro | World Fixed UI用 | ✗ 未追加 |
+| EventSequencer | [SYSTEM] | 汎用イベントシーケンス | 📝 設計中 |
+| GazeGuide | [SYSTEM] | 注視誘導 | 📝 設計中 |
+| MessageTrigger | 各フェーズ | メッセージトリガー | 📝 設計中 |
 
 ---
 

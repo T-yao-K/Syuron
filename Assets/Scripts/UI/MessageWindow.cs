@@ -33,8 +33,13 @@ public class MessageWindow : UdonSharpBehaviour
     public float popupDuration = 5.0f;
 
     [Header("完全固定設定 (Mode 2)")]
-    [Tooltip("固定表示時のアンカー位置")]
-    public Transform worldFixedAnchor;
+    [Tooltip("フェーズごとの固定表示アンカー位置")]
+    public Transform[] worldFixedAnchors;
+    private int currentAnchorIndex = 0;
+
+    [Header("GazeGuide連携")]
+    [Tooltip("連携する注視誘導システム")]
+    public UdonSharpBehaviour gazeGuide;
 
     [Header("UI参照")]
     [Tooltip("背景パネル")]
@@ -156,6 +161,49 @@ public class MessageWindow : UdonSharpBehaviour
         // 元のモードに戻さない（ポップアップ終了後も現在のモードを維持）
     }
 
+    /// <summary>
+    /// 注視誘導と同時にメッセージを表示する
+    /// </summary>
+    /// <param name="text">表示するメッセージ</param>
+    /// <param name="target">注視対象のTransform</param>
+    public void ShowWithGaze(string text, Transform target)
+    {
+        if (gazeGuide != null && target != null)
+        {
+            gazeGuide.SetProgramVariable("target", target);
+            gazeGuide.SendCustomEvent("StartGuide");
+        }
+        ShowMessage(text);
+    }
+
+    /// <summary>
+    /// World Fixedモードのアンカーをインデックスで切り替える
+    /// </summary>
+    /// <param name="index">アンカーのインデックス</param>
+    public void SetWorldFixedAnchor(int index)
+    {
+        if (worldFixedAnchors != null && index >= 0 && index < worldFixedAnchors.Length)
+        {
+            currentAnchorIndex = index;
+            Debug.Log($"[MessageWindow] アンカー切り替え: {index}");
+        }
+    }
+
+    /// <summary>
+    /// World Fixedモードのアンカーを直接指定する（MessageTrigger向け）
+    /// </summary>
+    /// <param name="anchor">使用するアンカーTransform</param>
+    public void SetWorldFixedAnchorDirect(Transform anchor)
+    {
+        if (worldFixedAnchors != null && worldFixedAnchors.Length > 0)
+        {
+            // 配列の最初の要素を上書き（一時的）
+            worldFixedAnchors[0] = anchor;
+            currentAnchorIndex = 0;
+        }
+        Debug.Log($"[MessageWindow] アンカー直接設定: {anchor?.name}");
+    }
+
     #endregion
 
     #region Private Methods
@@ -211,11 +259,15 @@ public class MessageWindow : UdonSharpBehaviour
     /// </summary>
     private void UpdatePositionWorldFixed()
     {
-        if (worldFixedAnchor == null) return;
+        if (worldFixedAnchors == null || worldFixedAnchors.Length == 0) return;
+        if (currentAnchorIndex < 0 || currentAnchorIndex >= worldFixedAnchors.Length) return;
+        
+        Transform anchor = worldFixedAnchors[currentAnchorIndex];
+        if (anchor == null) return;
 
         // アンカー位置に固定
-        transform.position = worldFixedAnchor.position;
-        transform.rotation = worldFixedAnchor.rotation;
+        transform.position = anchor.position;
+        transform.rotation = anchor.rotation;
     }
 
     /// <summary>

@@ -1,13 +1,20 @@
-# システム設計書：注視誘導・戦闘シーケンスシステム
+# システム設計書：注視誘導・イベントシーケンスシステム
+
+> **実装状態**: 📝 設計中  
+> **旧名称**: GazeGuide_BattleSequencer.md  
+> **今後の方向**: BattleSequencer を汎用 EventSequencer に発展予定
 
 ## 1. 概要
 
 本ドキュメントでは、Phase 3（戦闘フェーズ）で使用する2つの連携システムを設計する。
 
+> [!NOTE]
+> 今後、BattleSequencer は **EventSequencer** として汎用化し、Phase 2 (Strategy) など他のフェーズでも再利用可能な設計に変更予定。
+
 | システム | 役割 |
 |---------|------|
 | **GazeGuide** | プレイヤーの視線を重要なオブジェクトに誘導する |
-| **BattleSequencer** | 戦闘フェーズのサブフェーズ（3-A〜3-D）を順序制御する |
+| **EventSequencer** (旧: BattleSequencer) | フェーズ内のサブシーケンスを順序制御する |
 
 ---
 
