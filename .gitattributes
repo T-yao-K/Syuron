@@ -1,0 +1,5 @@
+# Font files (大容量のため LFS で管理)
+*.ttf filter=lfs diff=lfs merge=lfs -text
+*.otf filter=lfs diff=lfs merge=lfs -text
+
+# 注意: *.asset は LFS で管理しない（SDK ファイルと競合するため）

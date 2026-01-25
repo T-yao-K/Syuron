@@ -12,6 +12,10 @@ public class GameManager : UdonSharpBehaviour
     [Tooltip("各フェーズのスタート地点 (Transform) を順番に登録")]
     public Transform[] spawnPoints;
 
+    [Header("UI参照")]
+    [Tooltip("メッセージウィンドウへの参照")]
+    public MessageWindow messageWindow;
+
     private int currentPhaseIndex = 0; // 現在のフェーズ番号
 
     void Start()
@@ -53,6 +57,42 @@ public class GameManager : UdonSharpBehaviour
         if (player != null && spawnPoints[nextIndex] != null)
         {
             player.TeleportTo(spawnPoints[nextIndex].position, spawnPoints[nextIndex].rotation);
+        }
+
+        // 4. フェーズごとにUIモードを切り替え
+        if (messageWindow != null)
+        {
+            switch (nextIndex)
+            {
+                case 0: // Intro
+                    messageWindow.SetMode(2); // World Fixed
+                    // ============================================
+                    // [テスト用] 本番では削除または適切なテキストに置換
+                    // ============================================
+                    messageWindow.ShowMessage("[テスト] Phase 0: Intro\nWorld Fixed モードのテスト表示です");
+                    break;
+                case 1: // Strategy
+                    messageWindow.SetMode(0); // Always On
+                    // ============================================
+                    // [テスト用] 本番では削除または適切なテキストに置換
+                    // ============================================
+                    messageWindow.ShowMessage("[テスト] Phase 1: Strategy\nAlways On モードのテスト表示です");
+                    break;
+                case 2: // Battle
+                    messageWindow.SetMode(0); // Always On
+                    // ============================================
+                    // [テスト用] 本番では削除または適切なテキストに置換
+                    // ============================================
+                    messageWindow.ShowMessage("[テスト] Phase 2: Battle\nAlways On モードのテスト表示です");
+                    break;
+                case 3: // Outro
+                    messageWindow.SetMode(2); // World Fixed
+                    // ============================================
+                    // [テスト用] 本番では削除または適切なテキストに置換
+                    // ============================================
+                    messageWindow.ShowMessage("[テスト] Phase 3: Outro\nWorld Fixed モードのテスト表示です");
+                    break;
+            }
         }
 
         // インデックス更新
