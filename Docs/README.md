@@ -24,7 +24,8 @@ Docs/
 │   └── MessageTrigger.md     メッセージトリガー設計
 │
 ├── 📁 Setup/            セットアップ手順
-│   └── Setup_MessageWindow.md
+│   ├── Setup_MessageWindow.md
+│   └── Setup_GazeGuide.md
 │
 └── 📁 Testing/          テストドキュメント
     └── TestProcedures.md  動作確認手順書
@@ -47,7 +48,7 @@ Docs/
 | メッセージ表示 | [UI.md](Components/UI.md), [MessageWindow_API.md](Components/MessageWindow_API.md) |
 | メッセージトリガー設置 | [MessageTrigger.md](Components/MessageTrigger.md) |
 | イベントシーケンス | [EventSequencer.md](Components/EventSequencer.md) |
-| シーンセットアップ | [Setup_MessageWindow.md](Setup/Setup_MessageWindow.md) |
+| シーンセットアップ | [Setup_MessageWindow.md](Setup/Setup_MessageWindow.md), [Setup_GazeGuide.md](Setup/Setup_GazeGuide.md) |
 
 ### テスト・検証する場合
 
@@ -79,6 +80,7 @@ Docs/
 | ファイル | 内容 |
 |---------|------|
 | **Setup_MessageWindow.md** | MessageWindow の Unity セットアップ手順 |
+| **Setup_GazeGuide.md** | GazeGuide の Unity セットアップ手順 |
 
 ### Testing/ - テストドキュメント
 
@@ -101,3 +103,4 @@ Docs/
 | 日付 | 内容 |
 |------|------|
 | 2026-01-25 | 初版作成、ディレクトリ構造整理 |
+| 2026-03-02 | Setup_GazeGuide.md 追加 |
