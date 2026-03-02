@@ -14,6 +14,23 @@
 
 ---
 
+## [2026-03-02] - ドキュメント最新化
+
+### 変更
+- **SystemDesign.md**: MessageTriggerの実装状態を「📝 設計中」から「✅ 実装済」に更新
+- **SystemDesign.md**: 実装優先順位を最新化（GazeGuide/EnemyController/EventSequencerを追加）
+- **TODO.md**: MessageTrigger.cs を完了済みに移動
+- **CHANGELOG.md**: 1月以降の変更履歴を追記
+
+### 追加
+- **GazeGuide.cs**: 注視誘導システム
+  - ハイライトエフェクト（パルスアニメーション付き）
+  - 矢印インジケータ（視界外誘導）
+  - 照準ガイド（ビルボード対応）
+  - MessageWindow.ShowWithGaze() との連携
+
+---
+
 ## [2026-01-25] - ドキュメント整理・機能拡張
 
 ### 追加
