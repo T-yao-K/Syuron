@@ -261,10 +261,10 @@ public class GazeGuide : UdonSharpBehaviour
 |---------|------|------|
 | WeaponController | ✅ 実装済 | 武器の発砲・命中判定 |
 | EnemyController | ❌ 未実装 | 敵兵のAI・被弾処理 |
-| **GazeGuide** | 📝 設計中 | **注視誘導システム** |
+| **GazeGuide** | ✅ 実装済 | **注視誘導システム** |
 | **EventSequencer** | 📝 設計中 | **汎用イベントシーケンス制御** |
 | MessageWindow | ✅ 実装済 | 視点追従UI |
-| **MessageTrigger** | 📝 設計中 | **メッセージ外部化トリガー** |
+| MessageTrigger | ✅ 実装済 | メッセージ外部化トリガー |
 | HitEffect | ❌ 未実装 | 命中エフェクト |
 | MuzzleFlash | ❌ 未実装 | 発砲エフェクト |
 
@@ -293,8 +293,8 @@ public class GazeGuide : UdonSharpBehaviour
 | **コア** | NextButton | ✅ 実装済 | フェーズ遷移トリガー |
 | **コア** | EventSequencer | 📝 設計中 | 汎用イベントシーケンス制御 |
 | **UI** | MessageWindow | ✅ 実装済 | 視点追従UIシステム |
-| **UI** | MessageTrigger | 📝 設計中 | メッセージ外部化トリガー |
-| **UI** | GazeGuide | 📝 設計中 | 注視誘導システム |
+| **UI** | MessageTrigger | ✅ 実装済 | メッセージ外部化トリガー |
+| **UI** | GazeGuide | ✅ 実装済 | 注視誘導システム |
 | **UI** | DialogueSystem | ❌ 未実装 | VN形式の会話システム |
 | **戦闘** | WeaponController | ✅ 実装済 | 武器の発砲・リロード |
 | **戦闘** | EnemyController | ❌ 未実装 | 敵兵のAI・被弾処理 |
@@ -341,7 +341,7 @@ Assets/
 │   │   └── NextButton.cs        ✅
 │   ├── UI/
 │   │   ├── MessageWindow.cs     ✅
-│   │   ├── MessageTrigger.cs    📝
+│   │   ├── MessageTrigger.cs    ✅
 │   │   └── DialogueSystem.cs    ❌
 │   ├── Gun/
 │   │   └── WeaponController.cs  ✅
@@ -375,18 +375,20 @@ Assets/
 2. [x] NextButton - 遷移トリガー
 3. [x] WeaponController - 武器システム
 4. [x] MessageWindow - 視点追従UI
-5. [ ] **MessageTrigger - メッセージ外部化** ← 現在ここ
-6. [ ] EnemyController - 敵兵AI
+5. [x] MessageTrigger - メッセージ外部化
+6. [x] GazeGuide - 注視誘導システム
+7. [ ] **EnemyController - 敵兵AI** ← 現在ここ
+8. [ ] EventSequencer - イベントシーケンス制御
 
-### Phase 2: コンテンツ導入 (2月)
-6. [ ] DialogueSystem - 会話システム
-7. [ ] ジオラマシーンの構築
-8. [ ] 大村益次郎のアバター導入
+### Phase 2: コンテンツ導入 (2-3月)
+9. [ ] DialogueSystem - 会話システム
+10. [ ] ジオラマシーンの構築
+11. [ ] 大村益次郎のアバター導入
 
 ### Phase 3: 完成度向上 (3-4月)
-9. [ ] エフェクト追加
-10. [ ] サウンド追加
-11. [ ] ユーザーテスト・調整
+12. [ ] エフェクト追加
+13. [ ] サウンド追加
+14. [ ] ユーザーテスト・調整
 
 ---
 
@@ -408,3 +410,5 @@ Assets/
 |------|------|
 | 2026-01-18 | 初版作成 |
 | 2026-01-25 | MessageWindow実装済に更新、MessageTrigger・EventSequencer追加 |
+| 2026-03-02 | MessageTrigger実装済に更新、実装優先順位を最新化 |
+| 2026-03-02 | GazeGuide実装済に更新 |

@@ -2110,6 +2110,10 @@ PrefabInstance:
       value: MessageWindow
       objectReference: {fileID: 0}
     - target: {fileID: 7518944832929764798, guid: 823db28fd11f6fe4091bfe9372bc4f9a, type: 3}
+      propertyPath: distance
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7518944832929764798, guid: 823db28fd11f6fe4091bfe9372bc4f9a, type: 3}
       propertyPath: canvasGroup
       value: 
       objectReference: {fileID: 457697112}
@@ -2129,6 +2133,14 @@ PrefabInstance:
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 7518944832929764798, guid: 823db28fd11f6fe4091bfe9372bc4f9a, type: 3}
+    - target: {fileID: 7518944832929764798, guid: 823db28fd11f6fe4091bfe9372bc4f9a, type: 3}
+      propertyPath: worldFixedAnchors.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7518944832929764798, guid: 823db28fd11f6fe4091bfe9372bc4f9a, type: 3}
+      propertyPath: worldFixedAnchors.Array.data[0]
+      value: 
+      objectReference: {fileID: 423483774}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

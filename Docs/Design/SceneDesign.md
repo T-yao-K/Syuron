@@ -224,8 +224,8 @@ Syuron
 | MessageAnchor | Phase0_Intro | World Fixed UI用 | ✗ 未追加 |
 | MessageAnchor | Phase3_Outro | World Fixed UI用 | ✗ 未追加 |
 | EventSequencer | [SYSTEM] | 汎用イベントシーケンス | 📝 設計中 |
-| GazeGuide | [SYSTEM] | 注視誘導 | 📝 設計中 |
-| MessageTrigger | 各フェーズ | メッセージトリガー | 📝 設計中 |
+| GazeGuide | [SYSTEM] | 注視誘導 | ✅ 実装済（シーン配置は未完了） |
+| MessageTrigger | 各フェーズ | メッセージトリガー | ✅ 実装済（シーン配置は未完了） |
 
 ---
 
@@ -234,3 +234,4 @@ Syuron
 | 日付 | 内容 |
 |------|------|
 | 2026-01-18 | 初版作成 |
+| 2026-03-02 | MessageTrigger の状態を実装済に更新 |
