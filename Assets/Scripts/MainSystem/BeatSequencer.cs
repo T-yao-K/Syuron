@@ -9,7 +9,7 @@ using VRC.Udon;
 /// 流れ:
 ///   OP(自動) → 各ビート: 発光 → 使用(Interact) → 窓に文言＋ボイス
 ///            → ボイス終了まで進行無効 → 「次へ」トリガーで次へ → 次を発光
-///            → 全ビート完了 → 終了状態(暗転・体験終了)
+///            → 全ビート完了 → 窓に終了案内を表示（実験者誘導）
 ///
 /// 依存:
 ///   - MessageWindow（既存）: 窓表示
@@ -41,9 +41,20 @@ public class BeatSequencer : UdonSharpBehaviour
     [TextArea(2, 6)] public string[] windowTexts;
     public AudioClip[] voices;
 
-    [Header("終了")]
-    [Tooltip("暗転・「体験終了」オブジェクト")]
-    public GameObject endState;
+    [Header("ED（全使用後・ナレーション）")]
+    [TextArea(2, 4)]
+    [Tooltip("5obj 使い切った直後に窓へ表示（一人称エピローグ）")]
+    public string edText;
+    [Tooltip("ED ボイス（未割り当てなら edVoice なしで end 案内へ）")]
+    public AudioClip edVoice;
+
+    [Header("終了案内（ED のあと・実験者誘導）")]
+    [TextArea(2, 4)]
+    [Tooltip("VR条件：体験完了後に窓へ表示")]
+    public string endTextVR = "以上で体験終了です。\nヘッドセットを外してください。";
+    [TextArea(2, 4)]
+    [Tooltip("desktop条件：体験完了後に窓へ表示")]
+    public string endTextDesktop = "以上で体験終了です。\n実験者の指示をお待ちください。";
 
     [Header("調整")]
     [Tooltip("ボイス終了後、進行可能になるまでの余白（秒）")]
@@ -57,20 +68,26 @@ public class BeatSequencer : UdonSharpBehaviour
     void Start()
     {
         // 全インタラクト対象を無効化（current のみ後で有効化）
-        for (int i = 0; i < interactables.Length; i++)
+        if (interactables != null)
         {
-            if (interactables[i] != null) interactables[i].SetActive(false);
+            for (int i = 0; i < interactables.Length; i++)
+            {
+                if (interactables[i] != null) interactables[i].SetActive(false);
+            }
         }
-        if (endState != null) endState.SetActive(false);
-
-        PlayOp();
+        // MessageWindow.Start が後から走って非表示にするのを避けるため1フレーム遅延
+        SendCustomEventDelayedFrames(nameof(PlayOp), 1);
     }
 
     // ---------- OP ----------
     public void PlayOp()
     {
         canAdvance = false;
-        if (messageWindow != null) messageWindow.ShowMessage(opText);
+        if (messageWindow != null)
+        {
+            messageWindow.SetMode(0);
+            messageWindow.ShowMessage(opText);
+        }
         float dur = PlayVoice(opVoice);
         SendCustomEventDelayedSeconds(nameof(BeginFirstBeat), dur + advanceGuardExtra);
     }
@@ -88,7 +105,8 @@ public class BeatSequencer : UdonSharpBehaviour
         if (currentBeat < 0 || currentBeat >= interactables.Length) return;
         canAdvance = false;
         if (interactables[currentBeat] != null) interactables[currentBeat].SetActive(true);
-        if (glows[currentBeat] != null) glows[currentBeat].StartGlow();
+        GlowHighlight glow = GetGlow(currentBeat);
+        if (glow != null) glow.StartGlow();
     }
 
     // BeatInteract.Interact から呼ばれる（current のみ有効なので index は自動で正しい）
@@ -96,9 +114,10 @@ public class BeatSequencer : UdonSharpBehaviour
     {
         if (currentBeat < 0 || currentBeat >= interactables.Length) return;
 
-        if (glows[currentBeat] != null) glows[currentBeat].StopGlow();
-        if (messageWindow != null) messageWindow.ShowMessage(windowTexts[currentBeat]);
-        float dur = PlayVoice(voices[currentBeat]);
+        GlowHighlight glow = GetGlow(currentBeat);
+        if (glow != null) glow.StopGlow();
+        if (messageWindow != null) messageWindow.ShowMessage(GetWindowText(currentBeat));
+        float dur = PlayVoice(GetVoiceClip(currentBeat));
 
         canAdvance = false;
         SendCustomEventDelayedSeconds(nameof(EnableAdvance), dur + advanceGuardExtra);
@@ -129,8 +148,28 @@ public class BeatSequencer : UdonSharpBehaviour
 
     private void EndExperience()
     {
-        if (messageWindow != null) messageWindow.HideWindow();
-        if (endState != null) endState.SetActive(true);
+        canAdvance = false;
+        if (messageWindow == null) return;
+
+        if (!string.IsNullOrEmpty(edText))
+        {
+            messageWindow.ShowMessage(edText);
+            float dur = PlayVoice(edVoice);
+            SendCustomEventDelayedSeconds(nameof(ShowEndInstructions), dur + advanceGuardExtra);
+        }
+        else
+        {
+            ShowEndInstructions();
+        }
+    }
+
+    public void ShowEndInstructions()
+    {
+        if (messageWindow == null) return;
+
+        VRCPlayerApi player = Networking.LocalPlayer;
+        bool inVR = player != null && player.IsUserInVR();
+        messageWindow.ShowMessage(inVR ? endTextVR : endTextDesktop);
     }
 
     // clip を再生し、進行ガード長（秒）を返す。clip が null の時は noVoiceGuardSeconds。
@@ -141,5 +180,23 @@ public class BeatSequencer : UdonSharpBehaviour
         voiceSource.clip = clip;
         voiceSource.Play();
         return clip.length;
+    }
+
+    private GlowHighlight GetGlow(int index)
+    {
+        if (glows == null || index < 0 || index >= glows.Length) return null;
+        return glows[index];
+    }
+
+    private string GetWindowText(int index)
+    {
+        if (windowTexts == null || index < 0 || index >= windowTexts.Length) return "";
+        return windowTexts[index];
+    }
+
+    private AudioClip GetVoiceClip(int index)
+    {
+        if (voices == null || index < 0 || index >= voices.Length) return null;
+        return voices[index];
     }
 }

@@ -49,19 +49,19 @@ MonoBehaviour:
       Data: 
     - Name: $k
       Entry: 1
-      Data: gameManager
+      Data: sequencer
     - Name: $v
       Entry: 7
       Data: 2|UdonSharp.Compiler.FieldDefinition, UdonSharp.Editor
     - Name: <Name>k__BackingField
       Entry: 1
-      Data: gameManager
+      Data: sequencer
     - Name: <UserType>k__BackingField
       Entry: 7
       Data: 3|System.RuntimeType, mscorlib
     - Name: 
       Entry: 1
-      Data: UdonSharp.UdonSharpBehaviour, UdonSharp.Runtime
+      Data: BeatSequencer, Assembly-CSharp
     - Name: 
       Entry: 8
       Data: 
@@ -97,7 +97,7 @@ MonoBehaviour:
       Data: 6|UnityEngine.TooltipAttribute, UnityEngine.CoreModule
     - Name: tooltip
       Entry: 1
-      Data: "GameManager\u30AA\u30D6\u30B8\u30A7\u30AF\u30C8\u3092\u30C9\u30E9\u30C3\u30B0&\u30C9\u30ED\u30C3\u30D7\u3067\u5272\u308A\u5F53\u3066\u308B"
+      Data: "\u30B7\u30FC\u30F3\u4E0A\u306E BeatSequencer \u3092\u5272\u308A\u5F53\u3066\u308B"
     - Name: 
       Entry: 8
       Data: 

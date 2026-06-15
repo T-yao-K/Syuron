@@ -5,15 +5,14 @@ using VRC.Udon;
 
 public class NextButton : UdonSharpBehaviour
 {
-    [Tooltip("GameManagerオブジェクトをドラッグ&ドロップで割り当てる")]
-    public UdonSharpBehaviour gameManager; // UdonSharpBehaviour型で参照
+    [Tooltip("シーン上の BeatSequencer を割り当てる")]
+    public BeatSequencer sequencer;
 
     public override void Interact()
     {
-        if (gameManager != null)
+        if (sequencer != null)
         {
-            // SendCustomEventで他のUdonSharpスクリプトのメソッドを呼び出す
-            gameManager.SendCustomEvent("GoToNextPhase");
+            sequencer.TryAdvance();
         }
     }
 }

@@ -18,15 +18,21 @@ public class MessageWindow : UdonSharpBehaviour
     [Tooltip("0: 常時表示, 1: ポップアップ, 2: 完全固定")]
     public int displayMode = 0;
 
-    [Header("追従設定 (Mode 0, 1)")]
-    [Tooltip("カメラからウィンドウまでの距離 (m)")]
-    public float distance = 1.5f;
+    [Header("追従設定 (Mode 0, 1) — Desktop")]
+    [Tooltip("desktop：視点からウィンドウまでの距離 (m)")]
+    public float desktopDistance = 1.2f;
+    [Tooltip("desktop：追従のスムーズさ")]
+    public float desktopFollowSpeed = 8.0f;
+    [Tooltip("desktop：視線方向からの位置オフセット")]
+    public Vector3 desktopViewOffset = new Vector3(0f, -0.4f, 0f);
 
-    [Tooltip("追従のスムーズさ (大きいほど速い)")]
-    public float followSpeed = 5.0f;
-
-    [Tooltip("画面中央からの位置オフセット")]
-    public Vector3 viewOffset = new Vector3(0f, -0.3f, 0f);
+    [Header("追従設定 (Mode 0, 1) — VR")]
+    [Tooltip("VR：視点からウィンドウまでの距離 (m)")]
+    public float vrDistance = 1.5f;
+    [Tooltip("VR：追従のスムーズさ")]
+    public float vrFollowSpeed = 5.0f;
+    [Tooltip("VR：視線方向からの位置オフセット")]
+    public Vector3 vrViewOffset = new Vector3(0f, -0.3f, 0f);
 
     [Header("ポップアップ設定 (Mode 1)")]
     [Tooltip("ポップアップの表示時間 (秒)")]
@@ -59,6 +65,9 @@ public class MessageWindow : UdonSharpBehaviour
     private bool isVisible = false;
     private float popupTimer = 0f;
     private bool isVRMode = false;
+    private float distance = 1.5f;
+    private float followSpeed = 5.0f;
+    private Vector3 viewOffset = new Vector3(0f, -0.3f, 0f);
 
     void Start()
     {
@@ -69,20 +78,17 @@ public class MessageWindow : UdonSharpBehaviour
             isVRMode = player.IsUserInVR();
         }
 
-        // デスクトップモードの場合、パラメーターを調整
-        if (!isVRMode)
-        {
-            distance = 2.0f;
-            followSpeed = 8.0f;
-            viewOffset = new Vector3(0f, -0.4f, 0f);
-        }
+        ApplyPlatformFollowSettings();
 
-        // 初期状態は非表示
-        if (canvasGroup != null)
+        // 初期状態は非表示（BeatSequencer 等が Start より先に ShowMessage した場合は維持）
+        if (!isVisible)
         {
-            canvasGroup.alpha = 0f;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+            }
+            gameObject.SetActive(false);
         }
-        gameObject.SetActive(false);
     }
 
     void LateUpdate()
@@ -207,6 +213,22 @@ public class MessageWindow : UdonSharpBehaviour
     #endregion
 
     #region Private Methods
+
+    private void ApplyPlatformFollowSettings()
+    {
+        if (isVRMode)
+        {
+            distance = vrDistance;
+            followSpeed = vrFollowSpeed;
+            viewOffset = vrViewOffset;
+        }
+        else
+        {
+            distance = desktopDistance;
+            followSpeed = desktopFollowSpeed;
+            viewOffset = desktopViewOffset;
+        }
+    }
 
     /// <summary>
     /// Mode 0: 常時表示の位置更新
