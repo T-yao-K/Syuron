@@ -7,9 +7,8 @@ using VRC.Udon;
 /// 発光導線（GazeGuide の最小代替）。次に使うオブジェクトを Emission パルスで誘導する。
 /// StartGlow / StopGlow を SendCustomEvent または直接呼び出しで制御（BeatSequencer から使う）。
 ///
-/// ※ 重要：対象マテリアルのインスペクタで「Emission」を有効にしておくこと。
-///    （これで _EMISSION キーワードが焼かれ、実行時の SetColor("_EmissionColor", ...) が効く。
-///     コードから EnableKeyword を呼ばない方式にしてある＝Udon で確実に動く。）
+/// ※ 重要：対象マテリアルは Rendering Mode = Fade（半透明）にし、インスペクタで「Emission」を有効にしておくこと。
+///    （_EMISSION キーワードが焼かれ、実行時の SetColor が効く。EnableKeyword は呼ばない＝Udon で確実。）
 /// </summary>
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class GlowHighlight : UdonSharpBehaviour
@@ -27,6 +26,12 @@ public class GlowHighlight : UdonSharpBehaviour
 
     [Tooltip("最大エミッション強度")]
     public float maxIntensity = 2.0f;
+
+    [Tooltip("非発光時のアルファ（0 = 完全透明）")]
+    public float idleAlpha = 0f;
+
+    [Tooltip("発光中のベース色アルファ（半透明の立方体感）")]
+    public float glowAlpha = 0.55f;
 
     [Tooltip("起動時から光らせておくか")]
     public bool glowOnStart = false;
@@ -52,6 +57,7 @@ public class GlowHighlight : UdonSharpBehaviour
     {
         isGlowing = true;
         t = 0f;
+        SetEmission(0f);
     }
 
     /// <summary>発光停止</summary>
@@ -74,5 +80,9 @@ public class GlowHighlight : UdonSharpBehaviour
     {
         if (mat == null) return;
         mat.SetColor("_EmissionColor", glowColor * intensity);
+
+        Color c = mat.GetColor("_Color");
+        c.a = isGlowing ? glowAlpha : idleAlpha;
+        mat.SetColor("_Color", c);
     }
 }

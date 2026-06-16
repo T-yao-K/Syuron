@@ -1,9 +1,9 @@
-﻿using UdonSharp;
+using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 
-public class NextButton : UdonSharpBehaviour
+public class BackButton : UdonSharpBehaviour
 {
     [Tooltip("シーン上の BeatSequencer を割り当てる")]
     public BeatSequencer sequencer;
@@ -12,7 +12,7 @@ public class NextButton : UdonSharpBehaviour
     {
         if (sequencer != null)
         {
-            sequencer.TryPageNext();
+            sequencer.TryPageBack();
         }
     }
 }

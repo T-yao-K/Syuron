@@ -4,199 +4,425 @@ using VRC.SDKBase;
 using VRC.Udon;
 
 /// <summary>
-/// 単一環境のビート進行コントローラ（旧 GameManager のテレポート式フェーズの置き換え）。
+/// 単一環境のビート進行コントローラ。
 ///
 /// 流れ:
-///   OP(自動) → 各ビート: 発光 → 使用(Interact) → 窓に文言＋ボイス
-///            → ボイス終了まで進行無効 → 「次へ」トリガーで次へ → 次を発光
-///            → 全ビート完了 → 窓に終了案内を表示（実験者誘導）
+///   OP ページを解放 → Next/Back でページング
+///   → OP 最終ページ到達で obj1 が発光
+///   → オブジェクト Interact でそのビートのページを末尾に追加し先頭へジャンプ
+///   → そのビート最終ページ到達で次オブジェクトが発光
+///   → 全ビート後 ED ページ → ED 最終ページで「次へ」→ 終了案内ページ（ページング可能・戻れる）
 ///
-/// 依存:
-///   - MessageWindow（既存）: 窓表示
-///   - GlowHighlight（既存）: 各ビートの発光
-///   - BeatInteract（同梱）: 各インタラクト対象に付け、Interact を UseCurrentBeat に転送
-///   - NextButton（既存・要変更）: 参照を本スクリプトに、呼ぶイベントを "TryAdvance" に
-///
-/// 配列(glows / interactables / windowTexts / voices)は同じ長さ・同じ順番で登録すること。
-/// ボイス未割り当て(null)の間は noVoiceGuardSeconds 後に進行可能になる（グレーボックス検証用）。
+/// NextButton / BackButton はページング専用。ビート進行は Interact と最終ページ到達。
+/// 使用済みオブジェクトへの Interact は該当ビート先頭ページへジャンプのみ。
+/// 全 interactable は常時表示（非 Active 切替なし）。
 /// </summary>
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class BeatSequencer : UdonSharpBehaviour
 {
+    private const int MAX_PAGES = 32;
+    private const int BEAT_COUNT = 5;
+
     [Header("UI / 参照")]
     [Tooltip("既存の MessageWindow")]
     public MessageWindow messageWindow;
-    [Tooltip("ボイス再生用 AudioSource（1つを使い回す）")]
-    public AudioSource voiceSource;
 
-    [Header("OP（自動）")]
-    [TextArea(2, 5)] public string opText;
-    public AudioClip opVoice;
+    [Header("OP ページ（1行＝1ページ）")]
+    public string[] opPages;
+    [TextArea(2, 5)]
+    [Tooltip("opPages 未設定時のフォールバック（1ページ扱い）")]
+    public string opText;
 
-    [Header("ビート（順番に・配列は同じ長さ）")]
-    [Tooltip("各ビートで光らせる対象")]
-    public GlowHighlight[] glows;
-    [Tooltip("各ビートのインタラクト対象（コライダ付き）。current のみ有効化される")]
-    public GameObject[] interactables;
-    [TextArea(2, 6)] public string[] windowTexts;
-    public AudioClip[] voices;
+    [Header("各ビートのページ（obj1〜obj5・1行＝1ページ）")]
+    public string[] obj1Pages;
+    public string[] obj2Pages;
+    public string[] obj3Pages;
+    public string[] obj4Pages;
+    public string[] obj5Pages;
 
-    [Header("ED（全使用後・ナレーション）")]
+    [Header("発光導線（obj1〜obj5）")]
+    [Tooltip("各ビートで光らせる GlowHighlight")]
+    public GlowHighlight glowObj1;
+    public GlowHighlight glowObj2;
+    public GlowHighlight glowObj3;
+    public GlowHighlight glowObj4;
+    public GlowHighlight glowObj5;
+
+    [Header("レガシー（objNPages 未設定時・1ページ扱い）")]
+    [TextArea(2, 6)]
+    public string[] windowTexts;
+
+    [Header("ED ページ（全ビート完了後）")]
+    public string[] edPages;
     [TextArea(2, 4)]
-    [Tooltip("5obj 使い切った直後に窓へ表示（一人称エピローグ）")]
+    [Tooltip("edPages 未設定時のフォールバック")]
     public string edText;
-    [Tooltip("ED ボイス（未割り当てなら edVoice なしで end 案内へ）")]
-    public AudioClip edVoice;
 
-    [Header("終了案内（ED のあと・実験者誘導）")]
+    [Header("終了案内（ED 最終ページの次へで解放）")]
+    public string[] endPagesDesktop;
+    public string[] endPagesVR;
     [TextArea(2, 4)]
-    [Tooltip("VR条件：体験完了後に窓へ表示")]
+    [Tooltip("endPages 未設定時のフォールバック（1ページ扱い）")]
     public string endTextVR = "以上で体験終了です。\nヘッドセットを外してください。";
     [TextArea(2, 4)]
-    [Tooltip("desktop条件：体験完了後に窓へ表示")]
     public string endTextDesktop = "以上で体験終了です。\n実験者の指示をお待ちください。";
 
-    [Header("調整")]
-    [Tooltip("ボイス終了後、進行可能になるまでの余白（秒）")]
-    public float advanceGuardExtra = 0.3f;
-    [Tooltip("ボイス未割り当て時の進行ガード（秒）")]
-    public float noVoiceGuardSeconds = 1.5f;
+    [Header("Desktop ページ操作")]
+    [Tooltip("desktop のみ E=次へ / Q=戻る")]
+    public bool enableDesktopKeys = true;
 
-    private int currentBeat = -1; // -1 = OP前/OP中
-    private bool canAdvance = false;
+    // 解放済みページ履歴
+    private string[] pageHistory = new string[MAX_PAGES];
+    private int pageCount = 0;
+    private int viewPageIndex = 0;
+
+    // ビート状態
+    private int nextInteractBeat = 0;
+    private bool interactGlowEnabled = false;
+    private int awaitingFinalPageBeat = -1;
+    private int[] beatFirstPage = new int[BEAT_COUNT];
+    private int[] beatLastPage = new int[BEAT_COUNT];
+    private bool[] beatUsed = new bool[BEAT_COUNT];
+
+    private int opLastPageIndex = -1;
+    private bool inEdPhase = false;
+    private int edFirstPage = -1;
+    private int edLastPage = -1;
+    private bool inEndPhase = false;
+    private bool interactLocked = false;
 
     void Start()
     {
-        // 全インタラクト対象を無効化（current のみ後で有効化）
-        if (interactables != null)
+        for (int i = 0; i < BEAT_COUNT; i++)
         {
-            for (int i = 0; i < interactables.Length; i++)
+            beatUsed[i] = false;
+            beatFirstPage[i] = -1;
+            beatLastPage[i] = -1;
+        }
+
+        StopAllGlows();
+        SendCustomEventDelayedFrames(nameof(Bootstrap), 1);
+    }
+
+    public void Bootstrap()
+    {
+        AppendPages(GetOpPages());
+        opLastPageIndex = pageCount - 1;
+        viewPageIndex = 0;
+        nextInteractBeat = 0;
+        interactGlowEnabled = false;
+        awaitingFinalPageBeat = -1;
+        inEdPhase = false;
+        inEndPhase = false;
+        interactLocked = false;
+        edLastPage = -1;
+
+        ShowCurrentPage();
+        CheckOpCompleteAndEnableGlow();
+    }
+
+    void Update()
+    {
+        if (!enableDesktopKeys) return;
+
+        VRCPlayerApi player = Networking.LocalPlayer;
+        if (player == null || player.IsUserInVR()) return;
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            TryPageNext();
+        }
+        else if (Input.GetKeyDown(KeyCode.Q))
+        {
+            TryPageBack();
+        }
+    }
+
+    // ---------- ページング（NextButton / BackButton / Desktop E・Q） ----------
+
+    public void TryPageNext()
+    {
+        if (viewPageIndex < pageCount - 1)
+        {
+            viewPageIndex++;
+            ShowCurrentPage();
+            OnPageViewChanged();
+            return;
+        }
+
+        // ED 最終ページで「次へ」→ 終了案内ページを解放
+        if (inEdPhase && !inEndPhase && viewPageIndex == edLastPage)
+        {
+            BeginEndPhase();
+        }
+    }
+
+    public void TryPageBack()
+    {
+        if (viewPageIndex <= 0) return;
+
+        viewPageIndex--;
+        ShowCurrentPage();
+    }
+
+    private void OnPageViewChanged()
+    {
+        if (inEndPhase) return;
+
+        CheckOpCompleteAndEnableGlow();
+
+        if (awaitingFinalPageBeat >= 0 && viewPageIndex == beatLastPage[awaitingFinalPageBeat])
+        {
+            OnBeatFinalPageReached(awaitingFinalPageBeat);
+        }
+    }
+
+    // ---------- オブジェクト Interact（BeatInteract から） ----------
+
+    public void UseBeatByGlow(GlowHighlight glow)
+    {
+        if (glow == null) return;
+
+        for (int i = 0; i < BEAT_COUNT; i++)
+        {
+            if (GetGlow(i) == glow)
             {
-                if (interactables[i] != null) interactables[i].SetActive(false);
+                UseBeat(i);
+                return;
             }
         }
-        // MessageWindow.Start が後から走って非表示にするのを避けるため1フレーム遅延
-        SendCustomEventDelayedFrames(nameof(PlayOp), 1);
     }
 
-    // ---------- OP ----------
-    public void PlayOp()
+    public void UseBeat(int beatIndex)
     {
-        canAdvance = false;
-        if (messageWindow != null)
+        if (beatIndex < 0 || beatIndex >= BEAT_COUNT) return;
+
+        if (beatUsed[beatIndex])
         {
-            messageWindow.SetMode(0);
-            messageWindow.ShowMessage(opText);
+            JumpToBeatPages(beatIndex);
+            return;
         }
-        float dur = PlayVoice(opVoice);
-        SendCustomEventDelayedSeconds(nameof(BeginFirstBeat), dur + advanceGuardExtra);
+
+        if (interactLocked || !interactGlowEnabled || beatIndex != nextInteractBeat) return;
+
+        beatUsed[beatIndex] = true;
+        int firstNew = pageCount;
+        AppendPages(GetBeatPages(beatIndex));
+        beatFirstPage[beatIndex] = firstNew;
+        beatLastPage[beatIndex] = pageCount - 1;
+
+        StopGlowForBeat(beatIndex);
+        interactGlowEnabled = false;
+        awaitingFinalPageBeat = beatIndex;
+        viewPageIndex = firstNew;
+        ShowCurrentPage();
+
+        if (viewPageIndex == beatLastPage[beatIndex])
+        {
+            OnBeatFinalPageReached(beatIndex);
+        }
     }
 
-    public void BeginFirstBeat()
+    private void JumpToBeatPages(int beatIndex)
     {
-        currentBeat = 0;
-        EnterBeat();
+        if (beatFirstPage[beatIndex] < 0) return;
+        viewPageIndex = beatFirstPage[beatIndex];
+        ShowCurrentPage();
     }
 
-    // ---------- 各ビート ----------
-    // current のインタラクト対象を有効化し発光（文言はまだ出さない）
-    private void EnterBeat()
+    // ---------- ビート完了・ED・終了 ----------
+
+    private void OnBeatFinalPageReached(int beatIndex)
     {
-        if (currentBeat < 0 || currentBeat >= interactables.Length) return;
-        canAdvance = false;
-        if (interactables[currentBeat] != null) interactables[currentBeat].SetActive(true);
-        GlowHighlight glow = GetGlow(currentBeat);
+        awaitingFinalPageBeat = -1;
+
+        if (beatIndex < BEAT_COUNT - 1)
+        {
+            nextInteractBeat = beatIndex + 1;
+            interactGlowEnabled = true;
+            StartGlowForBeat(nextInteractBeat);
+            return;
+        }
+
+        BeginEdPhase();
+    }
+
+    private void BeginEdPhase()
+    {
+        if (inEdPhase) return;
+
+        inEdPhase = true;
+        interactGlowEnabled = false;
+        StopAllGlows();
+
+        edFirstPage = pageCount;
+        AppendPages(GetEdPages());
+        edLastPage = pageCount - 1;
+        if (edFirstPage > edLastPage) return;
+
+        viewPageIndex = edFirstPage;
+        ShowCurrentPage();
+    }
+
+    private void BeginEndPhase()
+    {
+        if (inEndPhase) return;
+
+        inEndPhase = true;
+        interactLocked = true;
+        interactGlowEnabled = false;
+        StopAllGlows();
+
+        int endFirstPage = pageCount;
+        AppendPages(GetEndPages());
+        if (endFirstPage >= pageCount) return;
+
+        viewPageIndex = endFirstPage;
+        ShowCurrentPage();
+    }
+
+    // ---------- OP 完了 → 最初の発光 ----------
+
+    private void CheckOpCompleteAndEnableGlow()
+    {
+        if (interactGlowEnabled || inEdPhase || inEndPhase || interactLocked) return;
+        if (opLastPageIndex < 0) return;
+        if (viewPageIndex < opLastPageIndex) return;
+        // いずれかのビート使用後は OP 用の再発光をしない
+        if (IsAnyBeatUsed()) return;
+
+        interactGlowEnabled = true;
+        StartGlowForBeat(nextInteractBeat);
+    }
+
+    private bool IsAnyBeatUsed()
+    {
+        for (int i = 0; i < BEAT_COUNT; i++)
+        {
+            if (beatUsed[i]) return true;
+        }
+        return false;
+    }
+
+    // ---------- ページ履歴 ----------
+
+    private void AppendPages(string[] pages)
+    {
+        if (pages == null) return;
+
+        for (int i = 0; i < pages.Length; i++)
+        {
+            if (pageCount >= MAX_PAGES) return;
+            if (string.IsNullOrEmpty(pages[i])) continue;
+            pageHistory[pageCount] = pages[i];
+            pageCount++;
+        }
+    }
+
+    private void ShowCurrentPage()
+    {
+        if (messageWindow == null) return;
+        if (viewPageIndex < 0 || viewPageIndex >= pageCount) return;
+
+        messageWindow.SetMode(0);
+        messageWindow.ShowPage(pageHistory[viewPageIndex], viewPageIndex + 1, pageCount);
+    }
+
+    private string[] GetOpPages()
+    {
+        if (opPages != null && opPages.Length > 0) return opPages;
+        return SinglePage(opText);
+    }
+
+    private string[] GetEdPages()
+    {
+        if (edPages != null && edPages.Length > 0) return edPages;
+        return SinglePage(edText);
+    }
+
+    private string[] GetEndPages()
+    {
+        VRCPlayerApi player = Networking.LocalPlayer;
+        bool inVR = player != null && player.IsUserInVR();
+
+        if (inVR)
+        {
+            if (endPagesVR != null && endPagesVR.Length > 0) return endPagesVR;
+            return SplitLinesToPages(endTextVR);
+        }
+
+        if (endPagesDesktop != null && endPagesDesktop.Length > 0) return endPagesDesktop;
+        return SplitLinesToPages(endTextDesktop);
+    }
+
+    private string[] SplitLinesToPages(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return new string[0];
+        return text.Split(new char[] { '\n' });
+    }
+
+    private string[] GetBeatPages(int beatIndex)
+    {
+        string[] pages = null;
+        switch (beatIndex)
+        {
+            case 0: pages = obj1Pages; break;
+            case 1: pages = obj2Pages; break;
+            case 2: pages = obj3Pages; break;
+            case 3: pages = obj4Pages; break;
+            case 4: pages = obj5Pages; break;
+        }
+
+        if (pages != null && pages.Length > 0) return pages;
+
+        if (windowTexts != null && beatIndex >= 0 && beatIndex < windowTexts.Length)
+        {
+            return SinglePage(windowTexts[beatIndex]);
+        }
+
+        return new string[0];
+    }
+
+    private string[] SinglePage(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return new string[0];
+        string[] one = new string[1];
+        one[0] = text;
+        return one;
+    }
+
+    // ---------- 発光 ----------
+
+    private void StartGlowForBeat(int beatIndex)
+    {
+        GlowHighlight glow = GetGlow(beatIndex);
         if (glow != null) glow.StartGlow();
     }
 
-    // BeatInteract.Interact から呼ばれる（current のみ有効なので index は自動で正しい）
-    public void UseCurrentBeat()
+    private void StopGlowForBeat(int beatIndex)
     {
-        if (currentBeat < 0 || currentBeat >= interactables.Length) return;
-
-        GlowHighlight glow = GetGlow(currentBeat);
+        GlowHighlight glow = GetGlow(beatIndex);
         if (glow != null) glow.StopGlow();
-        if (messageWindow != null) messageWindow.ShowMessage(GetWindowText(currentBeat));
-        float dur = PlayVoice(GetVoiceClip(currentBeat));
-
-        canAdvance = false;
-        SendCustomEventDelayedSeconds(nameof(EnableAdvance), dur + advanceGuardExtra);
-
-        // 再使用防止
-        if (interactables[currentBeat] != null) interactables[currentBeat].SetActive(false);
     }
 
-    public void EnableAdvance()
+    private void StopAllGlows()
     {
-        canAdvance = true;
-    }
-
-    // 「次へ」トリガー（NextButton）から呼ぶ
-    public void TryAdvance()
-    {
-        if (!canAdvance) return; // ボイス中・未使用中は無効
-        currentBeat++;
-        if (currentBeat >= interactables.Length)
+        for (int i = 0; i < BEAT_COUNT; i++)
         {
-            EndExperience();
+            StopGlowForBeat(i);
         }
-        else
-        {
-            EnterBeat();
-        }
-    }
-
-    private void EndExperience()
-    {
-        canAdvance = false;
-        if (messageWindow == null) return;
-
-        if (!string.IsNullOrEmpty(edText))
-        {
-            messageWindow.ShowMessage(edText);
-            float dur = PlayVoice(edVoice);
-            SendCustomEventDelayedSeconds(nameof(ShowEndInstructions), dur + advanceGuardExtra);
-        }
-        else
-        {
-            ShowEndInstructions();
-        }
-    }
-
-    public void ShowEndInstructions()
-    {
-        if (messageWindow == null) return;
-
-        VRCPlayerApi player = Networking.LocalPlayer;
-        bool inVR = player != null && player.IsUserInVR();
-        messageWindow.ShowMessage(inVR ? endTextVR : endTextDesktop);
-    }
-
-    // clip を再生し、進行ガード長（秒）を返す。clip が null の時は noVoiceGuardSeconds。
-    private float PlayVoice(AudioClip clip)
-    {
-        if (voiceSource == null || clip == null) return noVoiceGuardSeconds;
-        voiceSource.Stop();
-        voiceSource.clip = clip;
-        voiceSource.Play();
-        return clip.length;
     }
 
     private GlowHighlight GetGlow(int index)
     {
-        if (glows == null || index < 0 || index >= glows.Length) return null;
-        return glows[index];
-    }
-
-    private string GetWindowText(int index)
-    {
-        if (windowTexts == null || index < 0 || index >= windowTexts.Length) return "";
-        return windowTexts[index];
-    }
-
-    private AudioClip GetVoiceClip(int index)
-    {
-        if (voices == null || index < 0 || index >= voices.Length) return null;
-        return voices[index];
+        switch (index)
+        {
+            case 0: return glowObj1;
+            case 1: return glowObj2;
+            case 2: return glowObj3;
+            case 3: return glowObj4;
+            case 4: return glowObj5;
+            default: return null;
+        }
     }
 }

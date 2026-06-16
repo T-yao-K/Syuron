@@ -54,6 +54,15 @@ public class MessageWindow : UdonSharpBehaviour
     [Tooltip("メッセージテキスト (TextMeshPro)")]
     public TextMeshProUGUI messageText;
 
+    [Tooltip("ページ番号表示（例: 3 / 12）。未設定なら非表示")]
+    public TextMeshProUGUI pageIndicatorText;
+
+    [Tooltip("desktop 操作ヒント（例: E: 次へ  Q: 戻る）。未設定なら非表示")]
+    public TextMeshProUGUI desktopHintText;
+
+    [Tooltip("desktop 操作ヒントの文言")]
+    public string desktopHintTextContent = "E: 次へ  Q: 戻る";
+
     [Tooltip("フェード用 CanvasGroup")]
     public CanvasGroup canvasGroup;
 
@@ -121,21 +130,31 @@ public class MessageWindow : UdonSharpBehaviour
     /// </summary>
     public void ShowMessage(string text)
     {
+        ShowPage(text, 0, 0);
+    }
+
+    /// <summary>
+    /// テキスト＋ページ番号を表示する（currentPage / totalPages は 1 始まり）
+    /// </summary>
+    public void ShowPage(string text, int currentPage, int totalPages)
+    {
         if (messageText != null)
         {
             messageText.text = text;
         }
 
+        UpdatePageIndicator(currentPage, totalPages);
+        UpdateDesktopHint();
+
         isVisible = true;
         gameObject.SetActive(true);
 
-        // ポップアップモードの場合、タイマーをリセット
         if (displayMode == 1)
         {
             popupTimer = popupDuration;
         }
 
-        Debug.Log($"[MessageWindow] メッセージ表示: {text}");
+        Debug.Log($"[MessageWindow] メッセージ表示 ({currentPage}/{totalPages}): {text}");
     }
 
     /// <summary>
@@ -227,6 +246,39 @@ public class MessageWindow : UdonSharpBehaviour
             distance = desktopDistance;
             followSpeed = desktopFollowSpeed;
             viewOffset = desktopViewOffset;
+        }
+
+        UpdateDesktopHint();
+    }
+
+    private void UpdatePageIndicator(int currentPage, int totalPages)
+    {
+        if (pageIndicatorText == null) return;
+
+        if (totalPages > 1 && currentPage > 0)
+        {
+            pageIndicatorText.text = currentPage.ToString() + " / " + totalPages.ToString();
+            pageIndicatorText.gameObject.SetActive(true);
+        }
+        else
+        {
+            pageIndicatorText.text = "";
+            pageIndicatorText.gameObject.SetActive(false);
+        }
+    }
+
+    private void UpdateDesktopHint()
+    {
+        if (desktopHintText == null) return;
+
+        if (!isVRMode)
+        {
+            desktopHintText.text = desktopHintTextContent;
+            desktopHintText.gameObject.SetActive(true);
+        }
+        else
+        {
+            desktopHintText.gameObject.SetActive(false);
         }
     }
 
