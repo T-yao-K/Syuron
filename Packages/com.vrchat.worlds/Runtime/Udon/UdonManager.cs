@@ -383,6 +383,7 @@ namespace VRC.Udon
             _udonRunProgramDepth = new ThreadLocal<int>();
             _postLateUpdater = gameObject.AddComponent<PostLateUpdater>();
             _postLateUpdater.udonManager = this;
+            _udonEventScheduler.OnEventScheduled += HandleUdonEventScheduled;
             if(!Application.isPlaying)
             {
                 // ReSharper disable once RedundantJumpStatement
@@ -520,6 +521,8 @@ namespace VRC.Udon
             {
                 _fixedUpdateUdonBehaviours.RemoveWhere(o => o == null);
             }
+
+            _udonEventScheduler.RunScheduledEvents(EventTiming.FixedUpdate);
         }
 
         internal void PostLateUpdate()
@@ -548,17 +551,27 @@ namespace VRC.Udon
                     _postLateUpdateUdonBehaviours.Remove(udonBehaviour);
                 }
 
-                _postLateUpdater.enabled = _postLateUpdateUdonBehaviours.Count != 0;
             }
 
             if(anyNull)
             {
                 _postLateUpdateUdonBehaviours.RemoveWhere(o => o == null);
             }
+
+            _postLateUpdater.enabled =
+                _postLateUpdateUdonBehaviours.Count != 0 ||
+                _udonEventScheduler.HasAnyPendingScheduledEvents(EventTiming.PostLateUpdate);
+
+            _udonEventScheduler.RunScheduledEvents(EventTiming.PostLateUpdate);
         }
         
         private void OnDestroy()
         {
+            if (_udonEventScheduler != null)
+            {
+                _udonEventScheduler.OnEventScheduled -= HandleUdonEventScheduled;
+            }
+
             _udonRunProgramDepth?.Dispose();
             _udonRunProgramDepth = null;
         }
@@ -796,7 +809,7 @@ namespace VRC.Udon
         bool IUdonSignatureVerifier.VerifySignature(IUdonSignatureHolder signatureHolder)
         {
             #if VRC_CLIENT
-            if (WorldSignatureVerificationEnabled && signatureHolder is { IsInternallyValidated: false } && _verificationCache.TryAdd(signatureHolder, 0))
+            if (WorldSignatureVerificationEnabled && _verificationCache.TryAdd(signatureHolder, 0))
             {
                 var data = signatureHolder.SignedData;
                 var signature = signatureHolder.Signature;
@@ -932,6 +945,14 @@ namespace VRC.Udon
         public void ScheduleDelayedEvent(IUdonEventReceiver eventReceiver, string eventName, int delayFrames, EventTiming eventTiming) =>
             _udonEventScheduler.ScheduleDelayedFramesEvent(eventReceiver, eventName, delayFrames, eventTiming);
 
+        private void HandleUdonEventScheduled(EventTiming eventTiming)
+        {
+            if (eventTiming == EventTiming.PostLateUpdate)
+            {
+                _postLateUpdater.enabled = true;
+            }
+        }
+
         #endregion
 
         #region Control Methods
@@ -1018,6 +1039,13 @@ namespace VRC.Udon
         {
             return _blacklist.IsBlacklisted(objectToCheck);
         }
+
+        public void ApplyLightCullingMaskFilter(ref int lightCullingMask)
+        {
+            _udonClientInterface.ApplyLightCullingMaskFilter(ref lightCullingMask);
+        }
+
+        public int LightReservedLayerMask { get => _blacklist.LightReservedLayerMask; set => _blacklist.LightReservedLayerMask = value; }
 
         public IUdonWrapper GetWrapper()
         {

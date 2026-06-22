@@ -1320,4 +1320,16 @@ public class AetherTime : UdonSharpBehaviour
              + System.Math.Floor(30.6001 * (month + 1))
              + day + b - 1524.5;
     }
+
+    /// <summary>
+    /// 研究用：ネットワーク時刻ではなく固定の空の時刻を使う。
+    /// normalizedTime … 0=真夜中, 0.5=南中, 0.75=日没側（Override Value と同義）
+    /// </summary>
+    public void SetManualTimeOfDay(float normalizedTime)
+    {
+        _overrideTime = true;
+        _overrideDateTime = false;
+        _autoRotate = false;
+        _overrideValue = Mathf.Clamp01(normalizedTime);
+    }
 }

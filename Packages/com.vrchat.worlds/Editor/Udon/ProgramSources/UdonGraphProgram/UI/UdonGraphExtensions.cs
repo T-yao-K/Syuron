@@ -479,7 +479,7 @@ namespace VRC.Udon.Editor.ProgramSources.UdonGraphProgram.UI
                 return string.Empty;
             }
             char[] a = s.ToCharArray();
-            a[0] = char.ToUpper(a[0]);
+            a[0] = char.ToUpperInvariant(a[0]);
             return new string(a);
         }
 
@@ -693,7 +693,7 @@ namespace VRC.Udon.Editor.ProgramSources.UdonGraphProgram.UI
         {
             string newString = input;
             if (!String.IsNullOrEmpty(newString) && Char.IsUpper(newString[0]))
-                newString = Char.ToLower(newString[0]) + newString.Substring(1);
+                newString = Char.ToLowerInvariant(newString[0]) + newString.Substring(1);
             return newString;
         }
 

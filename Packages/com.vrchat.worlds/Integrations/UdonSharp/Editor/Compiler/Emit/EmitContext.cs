@@ -463,7 +463,7 @@ namespace UdonSharp.Compiler.Emit
                 ++mostSignificantBit;
             }
 
-            int enumValCount = (1 << mostSignificantBit) - 1;
+            int enumValCount = 1 << mostSignificantBit;
 
             object[] enumConstArr = new object[enumValCount];
 

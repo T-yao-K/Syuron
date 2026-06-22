@@ -745,7 +745,54 @@ namespace VRC.SDK3.Editor
                         });
                 }
             }
-            
+
+            // Discourage billboard particle systems with rolling enabled, because they tend break immersion for VR.
+            List<ParticleSystemRenderer> rollingBillboardParticleRenderers = GatherComponentsOfTypeInScene<ParticleSystemRenderer>();
+            for (int i = rollingBillboardParticleRenderers.Count - 1; i >= 0; i--)
+            {
+                ParticleSystemRenderer psr = rollingBillboardParticleRenderers[i];
+                bool isRollingBillboard = psr.renderMode == ParticleSystemRenderMode.Billboard && psr.allowRoll;
+                if (!isRollingBillboard)
+                {
+                    rollingBillboardParticleRenderers.RemoveAt(i);
+                }
+            }
+            if (rollingBillboardParticleRenderers.Count > 0)
+            {
+                _builder.OnGUIInformation(scene,
+                    "Found one or more particle systems set to roll with the camera. Press 'Auto Fix' to disable rolling. VRChat recommends disabling particle rolling because it can be immersion breaking when viewed in VR.",
+                    () =>
+                    {
+                        Object[] rendererObjects = new Object[rollingBillboardParticleRenderers.Count];
+                        for (int i = 0; i < rollingBillboardParticleRenderers.Count; i++)
+                        {
+                            rendererObjects[i] = rollingBillboardParticleRenderers[i].gameObject;
+                        }
+                        Selection.objects = rendererObjects;
+                    },
+                    () =>
+                    {
+                        // Go through and mark them as non-rolling.
+                        Undo.SetCurrentGroupName("Disable Particle Roll");
+                        int groupIndex = Undo.GetCurrentGroup();
+                        try
+                        {
+                            foreach (ParticleSystemRenderer psr in rollingBillboardParticleRenderers)
+                            {
+                                Undo.RecordObject(psr, $"Disable Roll for PSR {psr.name}");
+                                psr.allowRoll = false;
+
+                                PrefabUtility.RecordPrefabInstancePropertyModifications(psr);
+                            }
+                        }
+                        finally
+                        {
+                            Undo.CollapseUndoOperations(groupIndex);
+                        }
+                    }
+                );
+            }
+
             foreach (VRC.SDK3.Components.VRCObjectSync os in GatherComponentsOfTypeInScene<VRC.SDK3.Components.VRCObjectSync>())
             {
                 if (os.GetComponents<VRC.Udon.UdonBehaviour>().Any((ub) => ub.SyncIsManual))
@@ -980,7 +1027,7 @@ namespace VRC.SDK3.Editor
                 }
             }
 
-            UdonBehaviour[] allBehaviours = Object.FindObjectsOfType<UdonBehaviour>();
+            UdonBehaviour[] allBehaviours = Object.FindObjectsByType<UdonBehaviour>(FindObjectsSortMode.None);
             List<UdonBehaviour> failedBehaviours = new List<UdonBehaviour>(allBehaviours.Length);
             foreach (UdonBehaviour behaviour in allBehaviours)
             {
@@ -1023,7 +1070,7 @@ namespace VRC.SDK3.Editor
 
         private void FixPrimitivesWarning()
         {
-            UdonBehaviour[] allObjects = Object.FindObjectsOfType<UdonBehaviour>();
+            UdonBehaviour[] allObjects = Object.FindObjectsByType<UdonBehaviour>(FindObjectsSortMode.None);
             foreach (UdonBehaviour behaviour in allObjects)
             {
                 IUdonVariableTable publicVariables = behaviour.publicVariables;
@@ -1824,6 +1871,11 @@ namespace VRC.SDK3.Editor
                             await VRCApi.UpdateWorldInfo(_worldData.ID, _worldData, _worldUploadCancellationToken);
                     }
                 }
+                catch (ApiModeratedException e)
+                {
+                    ModeratedError(e.Fields, e.ErrorMessage);
+                    return;
+                }
                 catch (ApiErrorException e)
                 {
                     InfoUpdateError(this, e.ErrorMessage);
@@ -2544,6 +2596,7 @@ namespace VRC.SDK3.Editor
             VRC_SdkBuilder.shouldBuildUnityPackage = false;
             VRC_SdkBuilder.PreBuildBehaviourPackaging();
 
+            VRC_SdkBuilder.SetCurrentBuilder<ISDKWorldBuilder>();
             VRC_SdkBuilder.ClearCallbacks();
 
             var successTask = new TaskCompletionSource<(string path, string hash)>();
@@ -2771,6 +2824,11 @@ namespace VRC.SDK3.Editor
                     throw await HandleUploadError(new UploadException("Request Cancelled", e));
                 }
             }
+            catch (ApiModeratedException e)
+            {
+                AnalyticsSDK.WorldUploadFailed(pM.blueprintId, !creatingNewWorld);
+                throw await HandleUploadError(e);
+            }
             catch (ApiErrorException e)
             {
                 AnalyticsSDK.WorldUploadFailed(pM.blueprintId, !creatingNewWorld);
@@ -2819,6 +2877,9 @@ namespace VRC.SDK3.Editor
         
         private async Task<Exception> HandleUploadError(Exception exception)
         {
+            if (exception is ApiModeratedException e)
+                ModeratedError(e.Fields, e.Message);
+
             OnSdkUploadError?.Invoke(this, exception.Message);
             _uploadState = SdkUploadState.Failure;
             OnSdkUploadStateChange?.Invoke(this, _uploadState);
@@ -2841,7 +2902,13 @@ namespace VRC.SDK3.Editor
 
         private async Task VerifyUploadPermissions()
         {
-            if (!APIUser.CurrentUser.canPublishWorlds)
+            // During multi-platform builds, permissions were already verified on the first platform.
+            // Skip re-checking on subsequent platforms because the assembly reload from a platform
+            // switch can cause APIUser.CurrentUser to be null while the user fetch is still in-flight.
+            if (VRCMultiPlatformBuild.MPB && VRCMultiPlatformBuild.MPBBuiltCount > 0)
+                return;
+
+            if (!(APIUser.CurrentUser?.canPublishWorlds ?? false))
             {
                 VRCSdkControlPanel.ShowContentPublishPermissionsDialog();
                 throw await HandleBuildError(new BuildBlockedException("Current User does not have permissions to build and upload worlds"));
@@ -3006,6 +3073,10 @@ namespace VRC.SDK3.Editor
         }
         private async void UploadError(object sender, string error)
         {
+            // Since we only have access to the text of the error here - we short circuit based on that. The actual error notification is handled from `HandleUploadError`
+            if (error.Contains(typeof(ApiModeratedException).Name))
+                return;
+
             Core.Logger.Log("Failed to upload a world!");
             Core.Logger.LogError(error);
             
@@ -3052,6 +3123,32 @@ namespace VRC.SDK3.Editor
                 new GenericBuilderNotification(error),
                 "red"
             );
+        }
+
+        private async void ShowModeratedNotification(string[] fields)
+        {
+            await _builder.ShowBuilderNotification(
+                "Content Guidelines Check",
+                new ModeratedNotification(_builder, fields),
+                "white");
+        }
+
+        private async void ModeratedError(string[] fields, string error)
+        {
+            await Task.Delay(100);
+            _builderProgress.SetCancelButtonVisibility(false);
+            _builderProgress.HideProgress();
+            UiEnabled = true;
+            _thumbnail.Loading = false;
+            RevertThumbnail();
+            
+            if (Progress.Exists(_platformProgressId))
+            {
+                Progress.Report(_platformProgressId, 2, 2, error);
+                Progress.Finish(_platformProgressId, Progress.Status.Failed);
+            }
+            
+            ShowModeratedNotification(fields);
         }
         
         private void MultiPlatformUploadError(object sender, string error)

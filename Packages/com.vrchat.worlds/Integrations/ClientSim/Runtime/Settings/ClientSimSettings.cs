@@ -108,6 +108,7 @@ namespace VRC.SDK3.ClientSim
         public bool stopOnScriptChanges = true;
 
         public bool isInstanceOwner = true;
+        public bool isVRCPlus = true;
         public bool localPlayerIsMaster = true;
         public float initializationDelay = 0.0f;
 

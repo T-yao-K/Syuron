@@ -71,6 +71,10 @@ public class BeatSequencer : UdonSharpBehaviour
     [Tooltip("desktop のみ E=次へ / Q=戻る")]
     public bool enableDesktopKeys = true;
 
+    [Header("昼夜（任意）")]
+    [Tooltip("Aether 昼夜制御。未設定ならスキップ")]
+    public SyuronDayNight dayNight;
+
     // 解放済みページ履歴
     private string[] pageHistory = new string[MAX_PAGES];
     private int pageCount = 0;
@@ -216,6 +220,8 @@ public class BeatSequencer : UdonSharpBehaviour
         awaitingFinalPageBeat = beatIndex;
         viewPageIndex = firstNew;
         ShowCurrentPage();
+
+        NotifyDayNightForBeat(beatIndex);
 
         if (viewPageIndex == beatLastPage[beatIndex])
         {
@@ -424,5 +430,16 @@ public class BeatSequencer : UdonSharpBehaviour
             case 4: return glowObj5;
             default: return null;
         }
+    }
+
+    private void NotifyDayNightForBeat(int beatIndex)
+    {
+        if (dayNight == null)
+            return;
+
+        if (beatIndex == 3)
+            dayNight.SendCustomEvent("GoDusk");
+        else if (beatIndex == 4)
+            dayNight.SendCustomEvent("GoNight");
     }
 }

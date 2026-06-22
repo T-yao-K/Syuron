@@ -11,6 +11,7 @@ using UdonSharp;
 using UdonSharp.Compiler;
 using UdonSharp.Updater;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Callbacks;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -848,12 +849,13 @@ namespace UdonSharpEditor
                 return;
             
             BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
-            string[] defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(';');
+            NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup);
+            string[] defines = PlayerSettings.GetScriptingDefineSymbols(namedBuildTarget).Split(';');
 
             if (!defines.Contains("UDONSHARP", StringComparer.OrdinalIgnoreCase))
             {
                 defines = defines.AddItem("UDONSHARP").ToArray();
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, string.Join(";", defines));
+                PlayerSettings.SetScriptingDefineSymbols(namedBuildTarget, string.Join(";", defines));
                 UdonSharpUtils.Log("Updated scripting defines");
             }
 

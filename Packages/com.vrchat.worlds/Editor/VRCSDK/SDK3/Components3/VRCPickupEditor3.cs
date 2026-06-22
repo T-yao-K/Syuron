@@ -78,6 +78,8 @@ namespace VRC.SDK3.Editor
                 "https://creators.vrchat.com/worlds/components/vrc_pickup#versions");
             // Create AutoHold enum field (shown in V1.0, hidden in V1.1+ when toggle is used)
             fieldAutoHold = AddField(propAutoHold);
+            fieldAutoHold.RegisterValueChangeCallback(AutoHoldCallback);
+
             fieldUseText = AddFieldTooltip(propUseText,
                 "Text to display describing action for clicking button, when this pickup is already being held.");
             fieldInteractionText = AddFieldTooltip(propInteractionText, 
@@ -126,7 +128,7 @@ namespace VRC.SDK3.Editor
                         (int)VRC_Pickup.AutoHoldMode.Yes :
                         (int)VRC_Pickup.AutoHoldMode.No;
                     serializedObject.ApplyModifiedProperties();
-                    fieldUseText.SetVisible(evt.newValue);
+                    AutoHoldChanged();
                 });
         
                 container.Insert(container.IndexOf(fieldAutoHold) + 1, toggleField);
@@ -157,7 +159,10 @@ namespace VRC.SDK3.Editor
         // Syncs toggle state with underlying enum value without triggering callbacks
         private void UpdateToggleFromEnumValue(Toggle toggle)
         {
-            toggle.SetValueWithoutNotify(IsAutoHoldEnabled(propAutoHold.enumValueIndex));
+            bool treatAsAutoHold = propAutoHold.enumValueIndex
+                is (int)VRC_Pickup.AutoHoldMode.Yes
+                or (int)VRC_Pickup.AutoHoldMode.Sometimes;
+            toggle.SetValueWithoutNotify(treatAsAutoHold);
         }
         
         #endregion
@@ -169,21 +174,21 @@ namespace VRC.SDK3.Editor
         {
             return version > VRCPickup.Version.Version_1_0;
         }
-        
-        // Determines if AutoHold is enabled based on enum value (handles Sometimes and Yes modes)
-        private bool IsAutoHoldEnabled(int enumValue)
+
+        private void AutoHoldCallback(SerializedPropertyChangeEvent evt)
         {
-            return enumValue == (int)VRC_Pickup.AutoHoldMode.Yes ||
-                   enumValue == (int)VRC_Pickup.AutoHoldMode.Sometimes;
+            AutoHoldChanged();
         }
         
         // Updates UseText field visibility when AutoHold setting changes
         private void AutoHoldChanged()
         {
-            var pickup = target as VRCPickup;
-            bool isAutoHoldEnabled = IsAutoHoldEnabled(propAutoHold.enumValueIndex);
+            bool canDisplayUseText = propAutoHold.enumValueIndex
+                is (int)VRC_Pickup.AutoHoldMode.Yes
+                or (int)VRC_Pickup.AutoHoldMode.Sometimes
+                or (int)VRC_Pickup.AutoHoldMode.AutoDetect; // Use text can appear if gun or grip transforms are assigned.
             
-            fieldUseText.SetVisible(isAutoHoldEnabled);
+            fieldUseText.SetVisible(canDisplayUseText);
             
             // Update version upgrade info visibility
             versionUI?.RefreshUpgradeInfo();

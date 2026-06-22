@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using JetBrains.Annotations;
+using UnityEditor.Build;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.SceneManagement;
 using UnityEditor.XR.Management;
@@ -70,6 +71,8 @@ namespace VRC.Editor
         {
             "UnityEngine.XR.OpenXR.OpenXRLoader",
         };
+
+        private const int DefaultShaderChunkSizeMb = 4;
 
         private static bool _requestConfigureSettings = true;
 
@@ -234,9 +237,10 @@ namespace VRC.Editor
 
             // Needed for Microsoft.CSharp namespace in DLLMaker
             // Doesn't seem to work though
-            if(PlayerSettings.GetApiCompatibilityLevel(EditorUserBuildSettings.selectedBuildTargetGroup) != ApiCompatibilityLevel.NET_4_6)
+            NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            if (PlayerSettings.GetApiCompatibilityLevel(namedBuildTarget) != ApiCompatibilityLevel.NET_4_6)
             {
-                PlayerSettings.SetApiCompatibilityLevel(EditorUserBuildSettings.selectedBuildTargetGroup, ApiCompatibilityLevel.NET_4_6);
+                PlayerSettings.SetApiCompatibilityLevel(namedBuildTarget, ApiCompatibilityLevel.NET_4_6);
             }
 
             if(!PlayerSettings.runInBackground)
@@ -1097,9 +1101,12 @@ namespace VRC.Editor
             PlayerSettings.gcIncremental = true;
 
             PlayerSettings.stereoRenderingPath = StereoRenderingPath.SinglePass;
-            
-            PlayerSettings.SetIl2CppCompilerConfiguration(EditorUserBuildSettings.selectedBuildTargetGroup, Il2CppCompilerConfiguration.Release);
-            
+
+            NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            PlayerSettings.SetIl2CppCompilerConfiguration(namedBuildTarget, Il2CppCompilerConfiguration.Release);
+
+            PlayerSettings.SetDefaultShaderChunkSizeInMB(DefaultShaderChunkSizeMb);
+
             XRGeneralSettingsPerBuildTarget generalSettings;
             if (!EditorBuildSettings.TryGetConfigObject(
                     XRGeneralSettings.k_SettingsKey, out generalSettings))
@@ -1195,7 +1202,8 @@ namespace VRC.Editor
         {
             bool definesChanged = false;
             BuildTargetGroup buildTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
-            List<string> defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(';').ToList();
+            NamedBuildTarget namedBuildTarget = NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup);
+            List<string> defines = PlayerSettings.GetScriptingDefineSymbols(namedBuildTarget).Split(';').ToList();
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             if(assemblies.Any(assembly => assembly.GetType("VRC.Udon.UdonBehaviour") != null))
@@ -1250,10 +1258,12 @@ namespace VRC.Editor
             {
                 defines.Remove("VRC_ENABLE_PLAYER_PERSISTENCE");
             }
+
+            definesChanged = Tools.SetupExtraSDKDefines(ref defines, definesChanged);
             
             if(definesChanged)
             {
-                PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, string.Join(";", defines.ToArray()));
+                PlayerSettings.SetScriptingDefineSymbols(namedBuildTarget, string.Join(";", defines.ToArray()));
             }
         }
 

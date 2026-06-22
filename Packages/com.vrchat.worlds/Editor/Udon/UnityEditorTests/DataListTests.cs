@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -29,7 +30,7 @@ namespace Tests.DataContainers
             Assert.IsFalse(list.TryGetValue(0, TokenType.Boolean, out value));
             Assert.AreEqual(DataError.TypeMismatch, value);
         }
-        
+
         [Test]
         public void TestCount()
         {
@@ -43,6 +44,33 @@ namespace Tests.DataContainers
             Assert.AreEqual(2, test.Count, "removed one entry");
             test = new DataList("a", "b", "c", "d", "e", "f", new DataDictionary(), "h");
             Assert.AreEqual(8, test.Count, "initialized new list with 8 entries");
+        }
+
+        [TestCase(8)]
+        [TestCase(16)]
+        [TestCase(24)]
+        [TestCase(30)]
+        [TestCase(0)]
+        [TestCase(-1)]
+        public void TestCapacity(int capacity)
+        {
+            DataList test;
+            if (capacity < 0)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => test = new DataList(capacity));
+            }
+            else
+            {
+                test = new DataList(capacity);
+                Assert.AreEqual(capacity, test.Capacity);
+                Assert.AreEqual(0, test.Count);
+
+                for (int i = 0; i < capacity + 1; i++)
+                {
+                    test.Add(new DataToken());
+                }
+                Assert.Greater(test.Capacity, capacity);
+            }
         }
 
         [Test]
@@ -332,6 +360,57 @@ namespace Tests.DataContainers
             }
 
             return true;
+        }
+        
+        [Test]
+        public void TestListEquality()
+        {
+            // Make sure DataList act the same way as a C# List<> in terms of equality
+            void TestDictEqualityToCSharpList<T>(T _a, T _b)
+            {
+                // Test same keys same values
+               
+                DataList aDataList = new DataList();
+                aDataList.Add(new DataToken(_a));
+                DataList bDataList = new DataList();
+                bDataList.Add(new DataToken(_b));
+                
+                List<T> aCSharpList = new List<T>();
+                aCSharpList.Add(_a);
+                List<T> bCSharpList = new List<T>();
+                bCSharpList.Add(_b);
+                
+                Assert.AreEqual(aDataList == bDataList, aCSharpList == bCSharpList);
+                Assert.AreEqual(aDataList.Equals(bDataList), aCSharpList.Equals(bCSharpList));
+            }
+            
+            // Same values
+            TestDictEqualityToCSharpList(true, true);
+            TestDictEqualityToCSharpList((sbyte)5, (sbyte)5);
+            TestDictEqualityToCSharpList((byte)5, (byte)5);
+            TestDictEqualityToCSharpList((short)5, (short)5);
+            TestDictEqualityToCSharpList((ushort)5, (ushort)5);
+            TestDictEqualityToCSharpList((int)5, (int)5);
+            TestDictEqualityToCSharpList((uint)5, (uint)5);
+            TestDictEqualityToCSharpList((long)5, (long)5);
+            TestDictEqualityToCSharpList((ulong)5, (ulong)5);
+            TestDictEqualityToCSharpList((float)5, (float)5);
+            TestDictEqualityToCSharpList((double)5, (double)5);
+            TestDictEqualityToCSharpList("abc", "abc");
+            
+            // Different values
+            TestDictEqualityToCSharpList(true, false);
+            TestDictEqualityToCSharpList((sbyte)5, (sbyte)6);
+            TestDictEqualityToCSharpList((byte)5, (byte)6);
+            TestDictEqualityToCSharpList((short)5, (short)6);
+            TestDictEqualityToCSharpList((ushort)5, (ushort)6);
+            TestDictEqualityToCSharpList((int)5, (int)6);
+            TestDictEqualityToCSharpList((uint)5, (uint)6);
+            TestDictEqualityToCSharpList((long)5, (long)6);
+            TestDictEqualityToCSharpList((ulong)5, (ulong)6);
+            TestDictEqualityToCSharpList((float)5, (float)6);
+            TestDictEqualityToCSharpList((double)5, (double)6);
+            TestDictEqualityToCSharpList("abc", "def");
         }
     }
 }

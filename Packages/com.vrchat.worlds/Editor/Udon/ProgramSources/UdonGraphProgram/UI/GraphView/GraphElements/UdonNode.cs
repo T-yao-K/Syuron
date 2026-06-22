@@ -397,8 +397,14 @@ namespace VRC.Udon.Editor.ProgramSources.UdonGraphProgram.UI.GraphView
 
                     // don't add overload types that take pointers, not supported
                     string[] splitOptionName = optionName.Split(new[] { "__" }, StringSplitOptions.None);
-                    if (splitOptionName.Length >= 3)
+                    if (splitOptionName.Length == 3)
                     {
+                        // This is an overload taking no parameters.
+                        optionName = "()";
+                    }
+                    else if (splitOptionName.Length >= 3)
+                    {
+                        // List off all parameters.
                         optionName = $"({splitOptionName[2].Replace("_", ", ")})";
                     }
 

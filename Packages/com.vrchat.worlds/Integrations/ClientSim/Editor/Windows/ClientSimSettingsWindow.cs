@@ -37,6 +37,7 @@ namespace VRC.SDK3.ClientSim.Editor
         private readonly GUIContent _currentLanguageGuiContent = new GUIContent("Current Language", "The language the player is currently using.");
         private readonly GUIContent _isMasterGuiContent = new GUIContent("Local Player Is Master", "Set whether the local player starts off as the master of the instance. Setting this to false and starting Client Sim will spawn a remote player before the local player.");
         private readonly GUIContent _isInstanceOwnerGuiContent = new GUIContent("Is Instance Owner", "Set whether the local player is considered the instance owner");
+        private readonly GUIContent _isVRCPlusGuiContent = new GUIContent("Is VRC+", "Set whether the local player has an active VRC+ subscription");
         private readonly GUIContent _remotePlayerCustomNameGuiContent = new GUIContent("Remote Player Name", "Set a custom name for the next spawned remote player. Useful for testing udon script name detection");
         
         private const int WARNING_ICON_SIZE = 60;
@@ -324,7 +325,7 @@ namespace VRC.SDK3.ClientSim.Editor
             {
                 AddIndent();
                 
-                if (_settings.enableClientSim && FindObjectOfType<VRC_SceneDescriptor>() == null)
+                if (_settings.enableClientSim && FindFirstObjectByType<VRC_SceneDescriptor>() == null)
                 {
                     EditorGUILayout.HelpBox("No VRC_SceneDescriptor in scene. Please add one to enable ClientSim.", MessageType.Warning);
                 }
@@ -411,7 +412,8 @@ namespace VRC.SDK3.ClientSim.Editor
                 _settings.currentLanguage = _settings.GetLanguage(selectedLanguageIndex);
                 _settings.localPlayerIsMaster = EditorGUILayout.Toggle(_isMasterGuiContent, _settings.localPlayerIsMaster);
                 _settings.isInstanceOwner = EditorGUILayout.Toggle(_isInstanceOwnerGuiContent, _settings.isInstanceOwner);
-                
+                _settings.isVRCPlus = EditorGUILayout.Toggle(_isVRCPlusGuiContent, _settings.isVRCPlus);
+
                 // TODO display desktop/vr option here
                 
                 EditorGUI.EndDisabledGroup();

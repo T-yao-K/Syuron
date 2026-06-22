@@ -16,7 +16,6 @@ Material:
   - _CATALOGUSELOCATION_ON
   - _STARTWINKLEINVERT_ON
   - _USECATALOGSTARS_ON
-  - _USECITYLIGHT_ON
   - _USECLOUDMOONHIGHLIGHT_ON
   - _USEMETEORS_ON
   - _USEMILKYWAYDENSITYMAP_ON
@@ -75,8 +74,8 @@ Material:
     - _CatalogLatitude: 35.6895
     - _CatalogLocationPreset: 1
     - _CatalogLongitude: 139.6917
-    - _CatalogSiderealBaseTimeOfDay: 0.659
-    - _CatalogSiderealRotation: 0.9628906
+    - _CatalogSiderealBaseTimeOfDay: 0.88
+    - _CatalogSiderealRotation: 0.24511719
     - _CatalogStarBrightness: 0.31
     - _CatalogStarCount: 34107
     - _CatalogStarEmission: 11.5
@@ -124,10 +123,10 @@ Material:
     - _MilkyWayStrength: 0.035
     - _MilkyWayTintAmount: 1
     - _MilkyWayWidth: 0.08
-    - _MoonDeclination: 22.477825
+    - _MoonDeclination: -4.9660487
     - _MoonHaloStrength: 0.4
-    - _MoonPhase: 0.011372626
-    - _MoonRightAscension: 0.19167614
+    - _MoonPhase: 0.5005358
+    - _MoonRightAscension: 0.5151837
     - _MoonSize: 0.01
     - _MoonStarRange: 1.8
     - _MoonStarSuppress: 1
@@ -136,7 +135,7 @@ Material:
     - _OrionLineWidth: 0.00049
     - _RayleighStrength: 1
     - _SkyRotation: 0
-    - _SolarDeclination: 22.030228
+    - _SolarDeclination: 23.438047
     - _Star2Amount: 0.9
     - _Star3Amount: 0.9
     - _StarAxisX: 0
@@ -164,7 +163,7 @@ Material:
     - _SunDiskSoftness: 0.08
     - _SunIntensity: 1
     - _SunSize: 0.01
-    - _TimeOfDay: 0
+    - _TimeOfDay: 0.88
     - _UseCatalogStars: 1
     - _UseCityLight: 0
     - _UseCloudMoonHighlight: 1

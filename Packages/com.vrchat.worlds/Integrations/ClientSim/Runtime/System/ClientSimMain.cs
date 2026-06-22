@@ -20,6 +20,8 @@ using VRC.Udon.Security;
 using VRCNetworkBehaviour = VRC.SDK3.Network.VRCNetworkBehaviour;
 using VRCStation = VRC.SDKBase.VRCStation;
 using VRC.SDK3.UdonNetworkCalling;
+using VRC.Utility;
+
 #if VRC_ENABLE_PLAYER_PERSISTENCE
 using VRC.SDK3.ClientSim.Persistence;
 #endif
@@ -238,8 +240,10 @@ namespace VRC.SDK3.ClientSim
             _blacklistManager = new ClientSimBlacklistManager();
             _blacklistManager.AddObjectAndChildrenToBlackList(gameObject);
 
+            UdonManager.Instance.LightReservedLayerMask = LayerHelper.Mask_ReservedRenderLayers.value;
+
             Texture2DDefaultTextureHolder.BlacklistDefaultTextures(UdonManager.Instance);
-            
+
             _interactiveLayerProvider = new ClientSimInteractiveLayerProvider(_eventDispatcher);
             _sessionState = new ClientSimSessionState();
             
@@ -379,6 +383,7 @@ namespace VRC.SDK3.ClientSim
                 if (_player)
                 {
                     _player.isInstanceOwner = _settings.isInstanceOwner;
+                    _player.isVRCPlus = _settings.isVRCPlus;
                     _sceneManager.ResetSpawnOrder(); // Avoids any spawn offsets from pre-initialization of players
                     _player.EnablePlayer(_sceneManager.GetSpawnPoint(false), _sceneManager.GetSpawnRadius());
                 }
@@ -638,6 +643,7 @@ namespace VRC.SDK3.ClientSim
             VRCPlayerApi._GetPlayerById += _playerManager.GetPlayerByID;
             VRCPlayerApi._isMasterDelegate += _playerManager.IsMaster;
             VRCPlayerApi._isSuspendedDelegate += _playerManager.IsSuspended;
+            VRCPlayerApi._isVRCPlusDelegate += _playerManager.IsVRCPlus;
             VRCPlayerApi._TakeOwnership += ClientSimPlayerManager.SetOwner;
             VRCPlayerApi._IsOwner += _playerManager.IsOwner;
             VRCPlayerApi._isInstanceOwnerDelegate += _playerManager.IsInstanceOwner;
@@ -817,6 +823,8 @@ namespace VRC.SDK3.ClientSim
             VRCPlayerApi._GetPlayerId -= _playerManager.GetPlayerID;
             VRCPlayerApi._GetPlayerById -= _playerManager.GetPlayerByID;
             VRCPlayerApi._isMasterDelegate -= _playerManager.IsMaster;
+            VRCPlayerApi._isSuspendedDelegate -= _playerManager.IsSuspended;
+            VRCPlayerApi._isVRCPlusDelegate -= _playerManager.IsVRCPlus;
             VRCPlayerApi._TakeOwnership -= ClientSimPlayerManager.SetOwner;
             VRCPlayerApi._IsOwner -= _playerManager.IsOwner;
             VRCPlayerApi._isInstanceOwnerDelegate -= _playerManager.IsInstanceOwner;

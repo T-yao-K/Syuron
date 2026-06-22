@@ -327,11 +327,8 @@ namespace VRC.Udon.ProgramSources
 
         byte[] IUdonSignatureHolder.SignedData => serializedProgramCompressedBytes;
 
-        // in client only, allow skipping signature validation for internal behaviours (like stations)
-        [field: NonSerialized] public bool IsInternallyValidated { get; private set; } = false;
-    #if VRC_CLIENT
-        public void SetInternallyValidated() => IsInternallyValidated = true;
-    #endif
+        // for backwards compat since this API was exposed in the SDK before - doesn't do anything anymore
+        [Obsolete] public bool IsInternallyValidated => false;
 #endregion
 
 #region Entrypoint Hashing

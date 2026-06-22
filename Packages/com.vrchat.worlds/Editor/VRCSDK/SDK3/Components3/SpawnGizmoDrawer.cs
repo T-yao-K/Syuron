@@ -22,7 +22,7 @@ namespace VRC.SDK3.Editor
 
             if (sceneDescriptor == null)
             {
-                sceneDescriptor = GameObject.FindObjectOfType<VRCSceneDescriptor>();
+                sceneDescriptor = GameObject.FindFirstObjectByType<VRCSceneDescriptor>();
                 if (sceneDescriptor == null)
                     return;
             }

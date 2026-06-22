@@ -43,11 +43,12 @@
 **コンパイルの真実はUnity側。** AIが書いたコードは、Unityで再コンパイル→ClientSimでdesktop再生確認するまで「動く」と見なさない。`.cs` を編集したら必ずこのループを回す。
 
 ## ドキュメント運用
-
-- 仕様の正本：`Docs/Design/Brief.md`（研究方針）/ `WorldDesign.md`（実装設計）/ `WindowText.md`（窓文言）/ `FactList.md`（事実13行）。
-- 作業リスト：`Docs/TODO.md`（今回題材で書き直す）。
-- システムの挙動を変えたら、同じコミットで該当docを更新する。
-- 旧題材の文書は `Docs/Archive/` に退避済み。**参照・流用しない**。
+- 仕様の正本：
+  - 研究方針：`Docs/Design/研究ブリーフ_v5.md`
+  - 実装設計：`Docs/Design/VRChatワールド実装設計書_v8.md`
+  - 窓文言：`Docs/Design/ウィンドウ文言_5obj版.md`
+  - 事実13行：`研究ブリーフ_v5.md` の §12.5（独立させるなら `Docs/Design/FactList.md`）
+- 旧題材の文書は `Docs/Archive/` に退避済み。参照・流用しない。
 
 ## 進行モデル（実装の指針）
 

@@ -55,6 +55,7 @@ namespace VRC.SDK3.ClientSim
         public bool IsUserVR { get; private set; }
         public bool isInstanceOwner;
         public bool isSuspended;
+        public bool isVRCPlus;
 
         // Public to allow users to edit values in editor.
         public ClientSimPlayerLocomotionData locomotionData = new();

@@ -1843,7 +1843,7 @@ namespace VRC.Udon
         {
             if (!_symbolNameCache.TryGetValue((eventName, symbolName), out string newSymbolName))
             {
-                newSymbolName = $"{eventName.Substring(1)}{char.ToUpper(symbolName.First())}{symbolName.Substring(1)}";
+                newSymbolName = $"{eventName.Substring(1)}{char.ToUpperInvariant(symbolName.First())}{symbolName.Substring(1)}";
                 _symbolNameCache.Add((eventName, symbolName), newSymbolName);
             }
 
@@ -1878,6 +1878,8 @@ namespace VRC.Udon
             // while a scene is loading we do not allow searching the hierarchy
             if (_udonManager.IsSceneLoading)
                 return _udonManager as T;
+            if (TryGetComponent(out T foundOnThis))
+                return foundOnThis;
             var foundInParent = GetComponentInParent<T>();
             if (foundInParent == null || (foundInParent as Component) == null)
                 return _udonManager as T;
@@ -1899,6 +1901,7 @@ namespace VRC.Udon
                 if(_udonManager == null)
                 {
                     enabled = false;
+                    _hasError = true;
                     Logger.LogError(
                         $"Could not find the UdonManager; the UdonBehaviour on '{gameObject.name}' will not run.",
                         _categoryName,
@@ -1911,6 +1914,7 @@ namespace VRC.Udon
                 if(!LoadProgram(signatureVerifier))
                 {
                     enabled = false;
+                    _hasError = true;
                     Logger.Log(
                         $"Could not load the program; the UdonBehaviour on '{gameObject.name}' will not run.",
                         _categoryName,
@@ -1927,6 +1931,7 @@ namespace VRC.Udon
                 if(symbolTable == null || heap == null)
                 {
                     enabled = false;
+                    _hasError = true;
                     Logger.Log(
                         $"Invalid program; the UdonBehaviour on '{gameObject.name}' will not run.",
                         _categoryName,
@@ -1938,6 +1943,7 @@ namespace VRC.Udon
                 if(!ResolveUdonHeapReferences(symbolTable, heap))
                 {
                     enabled = false;
+                    _hasError = true;
                     Logger.Log(
                         $"Failed to resolve a GameObject/Component Reference; the UdonBehaviour on '{gameObject.name}' will not run.",
                         _categoryName,
@@ -1952,6 +1958,7 @@ namespace VRC.Udon
                 if(_udonVM == null)
                 {
                     enabled = false;
+                    _hasError = true;
                     Logger.LogError(
                         $"No UdonVM; the UdonBehaviour on '{gameObject.name}' will not run.",
                         _categoryName,
@@ -1994,6 +2001,7 @@ namespace VRC.Udon
             catch (Exception exception)
             {
                 enabled = false;
+                _hasError = true;
                 Logger.LogError(
                     $"An exception '{exception.Message}' occurred during initialization; the UdonBehaviour on '{gameObject.name}' will not run. Exception:\n{exception}",
                     _categoryName,

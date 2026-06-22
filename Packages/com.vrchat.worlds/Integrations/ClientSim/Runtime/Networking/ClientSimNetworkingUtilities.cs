@@ -48,7 +48,7 @@ namespace VRC.SDK3.ClientSim
         {
             if (_playerObjectList == null)
             {
-                _playerObjectList = Object.FindObjectsOfType<VRCPlayerObject>(true);
+                _playerObjectList = Object.FindObjectsByType<VRCPlayerObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             }
             return _playerObjectList;
         }
@@ -194,7 +194,7 @@ namespace VRC.SDK3.ClientSim
                 }
             }
             
-            GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject>(true);
+            GameObject[] allObjects = GameObject.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             
             foreach (var obj in allObjects)
             {

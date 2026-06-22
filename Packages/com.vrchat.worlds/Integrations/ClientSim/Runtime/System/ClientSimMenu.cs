@@ -82,8 +82,10 @@ namespace VRC.SDK3.ClientSim
         private Toggle isMasterToggle;
         [SerializeField]
         private Toggle isInstanceOwnerToggle;
+        [SerializeField]
+        private Toggle isVRCPlusToggle;
 
-        
+
         private IClientSimEventDispatcher _eventDispatcher;
         private IClientSimInput _input;
         private ClientSimSettings _settings;
@@ -138,6 +140,8 @@ namespace VRC.SDK3.ClientSim
             playerIdText.text = "";
             isMasterToggle.isOn = false;
             isInstanceOwnerToggle.isOn = settings.isInstanceOwner;
+            isVRCPlusToggle.isOn = settings.isVRCPlus;
+            isVRCPlusToggle.onValueChanged.AddListener(OnVRCPlusToggleChanged);
 
             UpdateValuesFromSettings();
 #if UNITY_EDITOR
@@ -414,6 +418,15 @@ namespace VRC.SDK3.ClientSim
         private void OnMasterChange(ClientSimOnNewMasterEvent masterEvent)
         {
             isMasterToggle.isOn = Networking.IsMaster;
+        }
+
+        private void OnVRCPlusToggleChanged(bool value)
+        {
+            var localPlayer = Networking.LocalPlayer;
+            if (localPlayer != null)
+            {
+                localPlayer.GetClientSimPlayer().isVRCPlus = value;
+            }
         }
 
         private void OnPlayerMoved(ClientSimOnPlayerMovedEvent movedEvent)
