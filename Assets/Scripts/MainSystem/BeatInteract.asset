@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BeatInteract
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 2398e7e30dafef848b5a71d29b35d155, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 5a37dbeab97a5b842bbf8d744ec0fbe7, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: eaa2bb1f84a71304798b022a73e1772e, type: 3}

@@ -63,8 +63,24 @@ public class MessageWindow : UdonSharpBehaviour
     [Tooltip("desktop 操作ヒントの文言")]
     public string desktopHintTextContent = "E: 次へ  Q: 戻る";
 
+    [Tooltip("VR 操作ヒント（例: 左: 戻る  右: 次へ）。未設定なら非表示")]
+    public TextMeshProUGUI vrHintText;
+
+    [Tooltip("VR 操作ヒントの文言")]
+    public string vrHintTextContent = "左: 戻る　右: 次へ";
+
     [Tooltip("フェード用 CanvasGroup")]
     public CanvasGroup canvasGroup;
+
+    [Header("VR ページ操作ゾーン")]
+    [Tooltip("BeatSequencer（左右ゾーンへ自動配線）")]
+    public BeatSequencer sequencer;
+
+    [Tooltip("左半分 Interact ゾーン（戻る）")]
+    public MessageWindowPageZone navZoneBack;
+
+    [Tooltip("右半分 Interact ゾーン（次へ）")]
+    public MessageWindowPageZone navZoneNext;
 
     [Header("フェード設定")]
     [Tooltip("フェードの持続時間 (秒)")]
@@ -88,6 +104,8 @@ public class MessageWindow : UdonSharpBehaviour
         }
 
         ApplyPlatformFollowSettings();
+        WireNavZones();
+        UpdateNavZones();
 
         // 初期状態は非表示（BeatSequencer 等が Start より先に ShowMessage した場合は維持）
         if (!isVisible)
@@ -143,11 +161,12 @@ public class MessageWindow : UdonSharpBehaviour
             messageText.text = text;
         }
 
-        UpdatePageIndicator(currentPage, totalPages);
-        UpdateDesktopHint();
-
         isVisible = true;
         gameObject.SetActive(true);
+
+        UpdatePageIndicator(currentPage, totalPages);
+        UpdatePlatformHints();
+        UpdateNavZones();
 
         if (displayMode == 1)
         {
@@ -163,6 +182,8 @@ public class MessageWindow : UdonSharpBehaviour
     public void HideWindow()
     {
         isVisible = false;
+        UpdateNavZones();
+        UpdatePlatformHints();
         Debug.Log("[MessageWindow] ウィンドウ非表示");
     }
 
@@ -248,7 +269,46 @@ public class MessageWindow : UdonSharpBehaviour
             viewOffset = desktopViewOffset;
         }
 
-        UpdateDesktopHint();
+        UpdatePlatformHints();
+    }
+
+    private void WireNavZones()
+    {
+        if (navZoneBack != null)
+        {
+            if (navZoneBack.sequencer == null)
+            {
+                navZoneBack.sequencer = sequencer;
+            }
+            navZoneBack.isNext = false;
+        }
+
+        if (navZoneNext != null)
+        {
+            if (navZoneNext.sequencer == null)
+            {
+                navZoneNext.sequencer = sequencer;
+            }
+            navZoneNext.isNext = true;
+        }
+    }
+
+    private void UpdateNavZones()
+    {
+        bool enableZones = isVisible && isVRMode;
+        SetNavZoneActive(navZoneBack, enableZones);
+        SetNavZoneActive(navZoneNext, enableZones);
+    }
+
+    private void SetNavZoneActive(MessageWindowPageZone zone, bool active)
+    {
+        if (zone == null) return;
+
+        Collider col = zone.GetComponent<Collider>();
+        if (col != null)
+        {
+            col.enabled = active;
+        }
     }
 
     private void UpdatePageIndicator(int currentPage, int totalPages)
@@ -267,18 +327,32 @@ public class MessageWindow : UdonSharpBehaviour
         }
     }
 
-    private void UpdateDesktopHint()
+    private void UpdatePlatformHints()
     {
-        if (desktopHintText == null) return;
-
-        if (!isVRMode)
+        if (desktopHintText != null)
         {
-            desktopHintText.text = desktopHintTextContent;
-            desktopHintText.gameObject.SetActive(true);
+            if (!isVRMode)
+            {
+                desktopHintText.text = desktopHintTextContent;
+                desktopHintText.gameObject.SetActive(isVisible);
+            }
+            else
+            {
+                desktopHintText.gameObject.SetActive(false);
+            }
         }
-        else
+
+        if (vrHintText != null)
         {
-            desktopHintText.gameObject.SetActive(false);
+            if (isVRMode && isVisible)
+            {
+                vrHintText.text = vrHintTextContent;
+                vrHintText.gameObject.SetActive(true);
+            }
+            else
+            {
+                vrHintText.gameObject.SetActive(false);
+            }
         }
     }
 

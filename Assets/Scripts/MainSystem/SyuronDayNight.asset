@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: SyuronDayNight
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: c62e708671de58d4d9b08b6e96c11973, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: ff9b72fc89e97ce47aa33a021d8a60f6, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 6b26749efde277245ac4bc7bf30ea8ba, type: 3}

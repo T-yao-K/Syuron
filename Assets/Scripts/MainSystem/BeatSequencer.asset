@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: BeatSequencer
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 9bdaeb91eb2389b4aadb83b13008d2a2, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 8fa686fc130a3bb489a3f36bc8792484, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: ffc2bd5c345d12142b7e4803f483f6a1, type: 3}

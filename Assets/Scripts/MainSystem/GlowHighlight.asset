@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: GlowHighlight
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 37f2a88197a82b5429f6002a76758811, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 58ef4f64141a87e489dd4e12ab1d08a0, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 83ad2407d21c6aa4e93b4241cb8308b9, type: 3}

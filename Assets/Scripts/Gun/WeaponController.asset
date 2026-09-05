@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: WeaponController
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: be4833def45d46e4bbf8170605716c9f, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: de08d8fdd08abe44a98dcec1b0a534ac, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 7ac56e43df8a9874ab779d0f2cc92a51, type: 3}
