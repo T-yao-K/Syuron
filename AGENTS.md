@@ -24,11 +24,18 @@
 
 ## 流用するコード（再実装しない）
 
-- `Assets/Scripts/UI/MessageWindow.cs`（＋ `Assets/Prefabs/MessageWindow.prefab`）— 視点下テキストウィンドウ。`IsUserInVR()` でdesktop/VR判定済み、Mode0=遅延フォロー追従、Mode2=ワールド固定。**これを土台に使う**。
-- `Assets/Scripts/UI/MessageTrigger.cs` — オブジェクト使用→ウィンドウ表示。各インタラクト対象に付ける。
-- `Assets/Scripts/MainSystem/NextButton.cs` — `SendCustomEvent` で進行を呼ぶ。
-- `Assets/Scripts/GlowHighlight.cs` — 次対象を発光させる導線（旧TODOのGazeGuideの代替）。
-- 退避対象（今回無関係・消さず脇へ）：`Assets/Scripts/Gun/*`、戦闘/敵まわり。
+- `Assets/Scripts/UI/MessageWindow.cs`（＋ prefab）— 視点下テキスト。`IsUserInVR()` で desktop/VR 切替。Mode0＝遅延フォロー。VR は左右 `MessageWindowPageZone`（戻る／次へ）。
+- `Assets/Scripts/MainSystem/BeatSequencer.cs` — 進行の本体。ビート進行はここ。旧 `GameManager` のフェーズテレポートは使わない。
+- `Assets/Scripts/MainSystem/BeatInteract.cs` / `NextButton.cs` / `BackButton.cs`
+- `Assets/Scripts/MainSystem/GlowHighlight.cs` — 次対象の発光。
+- 退避（消さず脇へ）：`Assets/Scripts/Gun/*`、`GazeGuide.cs`、旧 `MessageTrigger` 単体進行。
+
+## 鏡・アバター（2026-09 採用）
+
+- **方式**：VRC Mirror ＋ 窓と同じ長方形の上 55% 黒マスク。初期 OFF、obj3 Interact で ON。建物全体を鏡にしない。
+- **パリティ**：desktop/VR とも **同一の Private 書生アバター** を実験者が事前に着せる。ペデスタルは書生素材規約でも不可。
+- v8 推奨の RenderTexture＋固定モデルは使わない（手順はセットアップ書に残す）。
+- アバターは VRoid 済（袴・刀なし・革靴）。詳細は作業状況。
 
 ## UdonSharp の制約（AIが最も間違える所）
 
@@ -43,12 +50,15 @@
 **コンパイルの真実はUnity側。** AIが書いたコードは、Unityで再コンパイル→ClientSimでdesktop再生確認するまで「動く」と見なさない。`.cs` を編集したら必ずこのループを回す。
 
 ## ドキュメント運用
+- **今の進捗・次の作業**：`Docs/Design/作業状況_展示前.md`（展示 9/9 までの入口。先に読む）
 - 仕様の正本：
   - 研究方針：`Docs/Design/研究ブリーフ_v5.md`
   - 実装設計：`Docs/Design/VRChatワールド実装設計書_v8.md`
   - 窓文言：`Docs/Design/ウィンドウ文言_5obj版.md`
-  - 事実13行：`研究ブリーフ_v5.md` の §12.5（独立させるなら `Docs/Design/FactList.md`）
+  - 事実13行：`研究ブリーフ_v5.md` の §12.5（`FactList.md` は未作成）
+  - 鏡の現行手順：`Docs/Design/銀座実装セットアップ.md` §B
 - 旧題材の文書は `Docs/Archive/` に退避済み。参照・流用しない。
+- 週次 TODO（6月）は履歴。作業項目は `Docs/TODO.md` と作業状況を使う。
 
 ## 進行モデル（実装の指針）
 

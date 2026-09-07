@@ -7,4 +7,4 @@ EditorBuildSettings:
   m_Scenes: []
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 6e3fd9f2e2709bc4784521f7dab5feb9, type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: feb6d44d90ce52c4aa0a89eb8321b8be, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 7861f3c5c1e8d224f96585ee2f93fa87, type: 2}
